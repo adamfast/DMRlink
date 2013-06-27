@@ -10,55 +10,52 @@ This work represents the author's interpretation of the Motorola(tm) MOTOTRBO(tm
 This document assumes the reader is familiar with the concepts presented in the Motorola Solutions(tm), Inc. MOTOTRBO(tm) Systems Planner.  
   
 **CONVENTIONS USED:**  
-When communications exchanges are described, the symbols "->" and "<-" are used to donote the *direction* of the communcation. For example, "PEER -> MASTER" indicates communcation from the peer to the master. For each exchange outlined, the initiator of the particular communcation will be on the left for the durration of the particular item being illustrated.  
+When communications exchanges are described, the symbols "->" and "<-" are used to donote the *direction* of the communcation. For example, "PEER -> MASTER" indicates communcation from the peer to the master. For each exchange outlined, the initiator of the particular communcation will be on the left for the duration of the particular item being illustrated.  
   
 ###CONNECTION ESTABLISHMENT AND MAINTENANCE
 
 **CORE CONCEPTS:**  
-The IPSC system contains, essentially, two types of nodes: Master and Peer. Each IPSC network has exactly one master device and zero or more peers, recommended not to exceed 15. IPSC nodes may be a number of types of systems, such as repeaters, dispatch consoles, application software, etc. For example, the Motorola RDAC applicaiton acts as a peer in the IPSC network, though it doesn't operate as a repater. The IPSC protocol supports many possible node types, and only a few have be identified. This document currently only explores repeaters - both Master and Peer, and their roles in the IPSC network.  
+The IPSC system contains, essentially, two types of nodes: Master and Peer. Each IPSC network has exactly one master device and zero or more peers, recommended not to exceed 15. IPSC nodes may be a number of types of systems, such as repeaters, dispatch consoles, application software, etc. For example, the Motorola RDAC applicaiton acts as a peer in the IPSC network, though it doesn't operate as a repeater. The IPSC protocol supports many possible node types, and only a few have been identified. This document currently only explores repeaters - both Master and Peer, and their roles in the IPSC network.  
   
-All IPSC communication is via UDP, and only the master need a static IP address. Masters will operate behind NATs. A single UDP port, specified in programming the IPSC master device must be mapped thorugh any NAT/stateful firewalls for the master, while peers require no special treatment.  
+All IPSC communication is via UDP, and only the master needs a static IP address. Masters will operate behind NATs. A single UDP port, specified in programming the IPSC master device must be mapped thorugh any NAT/stateful firewalls for the master, while peers require no special treatment.  
   
-All nodes in and IPSC network maintain communication with each other at all times. The role of the master is merely to coordinate the joining of new nodes to the IPSC network. A functional IPSC network will continue without its master, as long as no new nodes need to join (or existing nodes need to re-join after a communcaitons outage, etc.). This is one of the most important core concepts in IPSC, as it is central to the NAT traversal AND tracking of active peers.  
+All nodes in an IPSC network maintain communication with each other at all times. The role of the master is merely to coordinate the joining of new nodes to the IPSC network. A functional IPSC network will continue without its master, as long as no new nodes need to join (or existing nodes need to re-join after a communications outage, etc.) This is one of the most important core concepts in IPSC, as it is central to the NAT traversal AND tracking of active peers.  
   
-Each peer will send keep-alives to each other peer in the IPSC network at an interval specified in the devices "firewall open timer". The elegantly simple, yet effective approach of IPSC, uses this keep-alive to both open, and keep open stateful firewall and NAT translations between peers. Since each device handles all communications from a single UDP port, when a device sends a keep-alive or a registration request to another device, the source-destination address/port tuple for that commonication is opened through stateful devices. The only requirement to maintain communication is that this timer be shorter than the UDP session timeout of network control elements (firewalls, packet shapers, NATs, etc.). Moreover, it does NOT appear that all devices in the IPSC require the same setting for this. Each device would appear to maintain its own set timing without interference from different interval settings on other nodes in the IPSC.  
+Each peer will send keep-alives to each other peer in the IPSC network at an interval specified in the devices "firewall open timer". The elegantly simple, yet effective approach of IPSC, uses this keep-alive to both open, and keep open stateful firewall and NAT translations between peers. Since each device handles all communications from a single UDP port, when a device sends a keep-alive or a registration request to another device, the source-destination address/port tuple for that commonication is opened through stateful devices. The only requirement to maintain communication is that this timer be shorter than the UDP session timeout of network control elements (firewalls, packet shapers, NATs, etc.) Moreover, it does NOT appear that all devices in the IPSC require the same setting for this. Each device would appear to maintain its own set timing without interference from different interval settings on other nodes in the IPSC.  
   
 **KNOWN IPSC PACKET TYPES:**  
-The following sections of this document will include various packet types. This is a list of currently knwon types and their meanings. Note: The names are arbitrarily chosen with the intention of being descriptive, and each is defined by what they've been "observed" to do in the wild.  
+The following sections of this document will include various packet types. This is a list of currently known types and their meanings. Note: The names are arbitrarily chosen with the intention of being descriptive, and each is defined by what they've been "observed" to do in the wild.  
 
-	RDAC_CTL         		= 0x70		RDAC packets observed to use this type
-	GROUP_VOICE      		= 0x80		This is a group voice call
-	GROUP_DATA       		= 0x83		This is a group data call
-	PVT_DATA         		= 0x84		This is a private data call
-	RPT_WAKE_UP             = 0X85      Wake up all repeaters (similar to subscriber DMR wake-up)
-	MASTER_REG_REQ          = 0x90		Request registraiton with master
-	MASTER_REG_REPLY        = 0x91		Master registration reply
-	PEER_LIST_REQ    		= 0x92		Request peer list from master
-	PEER_LIST_REPLY 	 	= 0x93		Master peer list reply
-	PEER_REG_REQ            = 0x94		Request registration with peer
-	PEER_REG_REPLY          = 0x95		Peer registration reply
-	MASTER_ALIVE_REQ        = 0x96		Master keep alive reqeust (to maseter)
-	MASTER_ALIVE_REPLY      = 0x97		Master keep alie reply (from master
-	PEER_ALIVE_REQ          = 0x98      Peer keep alive request
-	PEER_ALIVE_REPLY        = 0x99      Peer keep alive reply
+	RDAC_CTL         		  = 0x70		RDAC packets observed to use this type
+	GROUP_VOICE      		  = 0x80		This is a group voice call
+	GROUP_DATA       		  = 0x83		This is a group data call
+	PVT_DATA         		  = 0x84		This is a private data call
+	REG_REQ          		  = 0x90		Request registration with master
+	REG_REPLY        		  = 0x91		Master registration request reply
+	PEER_LIST_REQ    		  = 0x92		Request peer list from master
+	PEER_LIST_REPLY 	 	  = 0x93		Master peer list reply
+	PEER_KEEP_ALIVE_REQ		= 0x94		Peer keep alive request
+	PEER_KEEP_ALIVE_REPLY	= 0x95		Peer keep alive response
+	KEEP_ALIVE_REQ			  = 0x96		Master keep alive request (to maseter)
+	KEEP_ALIVE_REPLY		  = 0x97		Master keep alive reply (from master)
 
 
 **AUTHENTICATION:**  
-Most IPSC netowrks will be operated as "authenticated". This means that a key is used to create a disest of the packets exchanged in order to authenticate them. Each node in the IPSC must have the authentication key programed in order for the mechanism to work. The process is based on the SHA-1 digest protocol, where the "key" is a 20 byte hexideximal *string* (if a shorter key is programmed, leading zeros are used to create a 20 byte key). They IPSC payload and the key are used to create the digest, of which only the most significant 10 bytes are used (the last 10 are truncated). This digest is appended to the end of the IPSC payload before transmission. An example is illustrated below:  
+Most IPSC netowrks will be operated as "authenticated". This means that a key is used to create a digest of the packets exchanged in order to authenticate them. Each node in the IPSC network must have the authentication key programmed in order for the mechanism to work. The process is based on the SHA-1 digest protocol, where the "key" is a 20 byte hexadecimal *string* (if a shorter key is programmed, leading zeros are used to create a 20 byte key). The IPSC payload and the key are used to create the digest, of which only the most significant 10 bytes are used (the last 10 are truncated). This digest is appended to the end of the IPSC payload before transmission. An example is illustrated below:  
   
 	IPSC Registration Packet		Digest	
 	90000000016a000080dc04030400	b0ec45f4c3f8fb0c0b1d
 	
 
 **CONNECTION CREATION:**  
-The IPSC network truely "forms" when the first peer registers with the master. All peers register with the master in the same way, with a slight variation from the first peer. The registration and peer maintenance process is oulined  below:  
+The IPSC network truly "forms" when the first peer registers with the master. All peers register with the master in the same way, with a slight variation from the first peer. The registration and peer maintenance process is oulined below:  
   
   
 	 * Peer Initiates connection to IPSC:
 		 PEER -> MASTER		(peer sends a registration request to the master)
 		 PEER <- MASTER		(master sends a registration reply)
 		 PEER -> MASTER		(peer sends keep alive request to the master)
-		 PEER <- MASTER		(peer recieves keep alive response from the master)
+		 PEER <- MASTER		(peer receives keep alive response from the master)
 			if the registration response indicated there is more than one peer (which would have been the peer) in the IPSC network...
 		 PEER -> MASTER		(peer sends peer-list request to master)
 		 PEER <- MASTER		(master sends a list of all peers in the IPSC by radio ID, their IP addresses and UDP ports)
@@ -72,7 +69,7 @@ The IPSC network truely "forms" when the first peer registers with the master. A
 	
 **PACKET FORMATS:**  
   
-REGISTRATIION REQUESTS, KEEP-ALIVE REQUSTS AND RESPONSES:
+REGISTRATION REQUESTS, KEEP-ALIVE REQUESTS AND RESPONSES:
 The fields 'LINKING', 'FLAGS' and 'VERSION' are described in detail in the next section.
 
 	TYPE(1 Byte) + SRC_ID (4 Bytes) + LINKING (1 Byte) + FLAGS (4 Bytes) + VERSION (4 Bytes) [+ AUTHENTICATION (10 Bytes)]
