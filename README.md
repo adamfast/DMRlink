@@ -10,18 +10,18 @@ This work represents the author's interpretation of the Motorola(tm) MOTOTRBO(tm
 This document assumes the reader is familiar with the concepts presented in the Motorola Solutions(tm), Inc. MOTOTRBO(tm) Systems Planner.  
   
 **CONVENTIONS USED:**  
-When communications exchanges are described, the symbols "->" and "<-" are used to donote the *direction* of the communcation. For example, "PEER -> MASTER" indicates communcation from the peer to the master. For each exchange outlined, the initiator of the particular communcation will be on the left for the duration of the particular item being illustrated.  
+When communications exchanges are described, the symbols "->" and "<-" are used to denote the *direction* of the communcation. For example, "PEER -> MASTER" indicates communcation from the peer to the master. For each exchange outlined, the initiator of the particular communication will be on the left for the duration of the particular item being illustrated.  
   
 ###CONNECTION ESTABLISHMENT AND MAINTENANCE
 
 **CORE CONCEPTS:**  
-The IPSC system contains, essentially, two types of nodes: Master and Peer. Each IPSC network has exactly one master device and zero or more peers, recommended not to exceed 15. IPSC nodes may be a number of types of systems, such as repeaters, dispatch consoles, application software, etc. For example, the Motorola RDAC applicaiton acts as a peer in the IPSC network, though it doesn't operate as a repeater. The IPSC protocol supports many possible node types, and only a few have been identified. This document currently only explores repeaters - both Master and Peer, and their roles in the IPSC network.  
+The IPSC system contains, essentially, two types of nodes: Master and Peer. Each IPSC network has exactly one master device and zero or more peers, recommended not to exceed 15. IPSC nodes may be a number of types of systems, such as repeaters, dispatch consoles, application software, etc. For example, the Motorola RDAC application acts as a peer in the IPSC network, though it doesn't operate as a repeater. The IPSC protocol supports many possible node types, and only a few have been identified. This document currently only explores repeaters - both Master and Peer, and their roles in the IPSC network.  
   
-All IPSC communication is via UDP, and only the master needs a static IP address. Masters will operate behind NATs. A single UDP port, specified in programming the IPSC master device must be mapped thorugh any NAT/stateful firewalls for the master, while peers require no special treatment.  
+All IPSC communication is via UDP, and only the master needs a static IP address. Masters will operate behind NATs. A single UDP port, specified in programming the IPSC master device must be mapped through any NAT/stateful firewalls for the master, while peers require no special treatment.  
   
 All nodes in an IPSC network maintain communication with each other at all times. The role of the master is merely to coordinate the joining of new nodes to the IPSC network. A functional IPSC network will continue without its master, as long as no new nodes need to join (or existing nodes need to re-join after a communications outage, etc.) This is one of the most important core concepts in IPSC, as it is central to the NAT traversal AND tracking of active peers.  
   
-Each peer will send keep-alives to each other peer in the IPSC network at an interval specified in the devices "firewall open timer". The elegantly simple, yet effective approach of IPSC, uses this keep-alive to both open, and keep open stateful firewall and NAT translations between peers. Since each device handles all communications from a single UDP port, when a device sends a keep-alive or a registration request to another device, the source-destination address/port tuple for that commonication is opened through stateful devices. The only requirement to maintain communication is that this timer be shorter than the UDP session timeout of network control elements (firewalls, packet shapers, NATs, etc.) Moreover, it does NOT appear that all devices in the IPSC require the same setting for this. Each device would appear to maintain its own set timing without interference from different interval settings on other nodes in the IPSC.  
+Each peer will send keep-alives to each other peer in the IPSC network at an interval specified in the devices "firewall open timer". The elegantly simple, yet effective approach of IPSC, uses this keep-alive to both open, and keep open stateful firewall and NAT translations between peers. Since each device handles all communications from a single UDP port, when a device sends a keep-alive or a registration request to another device, the source-destination address/port tuple for that communication is opened through stateful devices. The only requirement to maintain communication is that this timer be shorter than the UDP session timeout of network control elements (firewalls, packet shapers, NATs, etc.) Moreover, it does NOT appear that all devices in the IPSC network require the same setting for this. Each device would appear to maintain its own set timing without interference from different interval settings on other nodes in the IPSC.  
   
 **KNOWN IPSC PACKET TYPES:**  
 The following sections of this document will include various packet types. This is a list of currently known types and their meanings. Note: The names are arbitrarily chosen with the intention of being descriptive, and each is defined by what they've been "observed" to do in the wild.  
@@ -34,14 +34,14 @@ The following sections of this document will include various packet types. This 
 	REG_REPLY        		  = 0x91		Master registration request reply
 	PEER_LIST_REQ    		  = 0x92		Request peer list from master
 	PEER_LIST_REPLY 	 	  = 0x93		Master peer list reply
-	PEER_KEEP_ALIVE_REQ		= 0x94		Peer keep alive request
-	PEER_KEEP_ALIVE_REPLY	= 0x95		Peer keep alive response
-	KEEP_ALIVE_REQ			  = 0x96		Master keep alive request (to maseter)
+	PEER_KEEP_ALIVE_REQ		  = 0x94		Peer keep alive request
+	PEER_KEEP_ALIVE_REPLY	  = 0x95		Peer keep alive response
+	KEEP_ALIVE_REQ			  = 0x96		Master keep alive request (to master)
 	KEEP_ALIVE_REPLY		  = 0x97		Master keep alive reply (from master)
 
 
 **AUTHENTICATION:**  
-Most IPSC netowrks will be operated as "authenticated". This means that a key is used to create a digest of the packets exchanged in order to authenticate them. Each node in the IPSC network must have the authentication key programmed in order for the mechanism to work. The process is based on the SHA-1 digest protocol, where the "key" is a 20 byte hexadecimal *string* (if a shorter key is programmed, leading zeros are used to create a 20 byte key). The IPSC payload and the key are used to create the digest, of which only the most significant 10 bytes are used (the last 10 are truncated). This digest is appended to the end of the IPSC payload before transmission. An example is illustrated below:  
+Most IPSC networks will be operated as "authenticated". This means that a key is used to create a digest of the packets exchanged in order to authenticate them. Each node in the IPSC network must have the authentication key programmed in order for the mechanism to work. The process is based on the SHA-1 digest protocol, where the "key" is a 20 byte hexadecimal *string* (if a shorter key is programmed, leading zeros are used to create a 20 byte key). The IPSC payload and the key are used to create the digest, of which only the most significant 10 bytes are used (the last 10 are truncated). This digest is appended to the end of the IPSC payload before transmission. An example is illustrated below:
   
 	IPSC Registration Packet		Digest	
 	90000000016a000080dc04030400	b0ec45f4c3f8fb0c0b1d
@@ -82,7 +82,7 @@ PEER LIST REQUEST:
 
 PEER LIST RESPONSE:
 
-	TYPE(1 Byte) + SRC_ID (4 Bytes) + NUM_PEERS* (2 Bytes) + {PEER_ID, PEER_IP, PEER_PORT, PEER_LINKING}... [+ AUTHENTICATION (10 Bytes)]
+	TYPE(1 Byte) + SRC_ID (4 Bytes) + NUM_PEERS * (2 Bytes) + {PEER_ID, PEER_IP, PEER_PORT, PEER_LINKING}... [+ AUTHENTICATION (10 Bytes)]
 	93 0004c2c0 002c* 
                  	 	00000001 6ccf7505 c351 6a
                 		0004c2c3 d17271e9 c35a 6a
@@ -124,13 +124,13 @@ NUMBER of PEERS: 2 Bytes
 Byte 5 - 0x00	= Unknown
 Byte 6 - Number of Peers (not including us)
 
-Protocol VERSION: 4 Bytes (These are pure guesses based on repaeter and c-Bridge code revisions)
+Protocol VERSION: 4 Bytes (These are pure guesses based on repeater and c-Bridge code revisions)
 Bytes 1-2 - 0x04, 0x03 = Current version? (numbering scheme unknown)
 Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
   
 **SAMPLE CODE:**  
   
-*Sample Python3 code to genearate the authentication digest:*  
+*Sample Python3 code to generate the authentication digest:*  
 
 	import binascii
 	import hmac
@@ -148,7 +148,7 @@ Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
 		print(binascii.b2a_hex(FULL_PAYLOAD))
 
 
-**Example Python3 code to register to a master, exchange keep alives, reqest, recieve and decode the peer list:**
+**Example Python3 code to register to a master, exchange keep alives, request, receive and decode the peer list:**
 
 	import socket
 	import binascii
@@ -158,22 +158,23 @@ Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
 	# Data structure for holding IPSC information
 	NETWORK = {
     	'IPSC1': {
-        	'LOCAL': {
-            	'DESCRIPTION': 'K0USY Lecompton, KS - Master',
-            	'MODE': b'\x6A',
-            	'PORT': 50001,
-            	'RADIO_ID': binascii.unhexlify('00000001'),
-            	'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000012345')
-			},
-      		'MASTER': {
-				'IP': '24.143.49.121',
-    			'MODE': b'\x6A',
-				'PORT': 50000,
-				'RADIO_ID': '',
-        		},
-        	'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
-            	#{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
-        	]        
+            'LOCAL': {
+                'DESCRIPTION': 'IPSC Network #1',
+                'MODE': b'\x6A',
+                'FLAGS': b'\x00\x00\x80\xDC',
+                'PORT': 50001,
+                'RADIO_ID': binascii.unhexlify('00000001'),
+                'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000000001')
+            },
+            'MASTER': {
+                'IP': '1.1.1.1',
+                'MODE': b'\x6A',
+                'PORT': 50000,
+                'RADIO_ID': '',
+            },
+            'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
+                #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
+            ]      
     	}
 	}
 	
@@ -209,7 +210,7 @@ Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
     	_socket.sendto((_data+_hash), (_dest_addr, _dest_port))
     	return
 		
-		# Note: This function ignores authentiation information!!!
+		# Note: This function ignores authentication information!!!
 	def receive_packet(_socket):
     	_data = (_socket.recv(1024))
     	_peer_id = str(int(binascii.b2a_hex(_data[2:5]), 16))
@@ -261,7 +262,7 @@ Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
 		
 	#********** THE ACTUAL MEAT
 		
-	# Create a socket to conetact IPSC Network #1
+	# Create a socket to contact IPSC Network #1
 	ipsc1_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	ipsc1_sock.bind(('', NETWORK['IPSC1']['LOCAL']['PORT']))
 	ipsc1_sock.setblocking(0)
