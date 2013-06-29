@@ -2,6 +2,7 @@ from __future__ import print_function
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from twisted.internet import task
+import argparse
 import binascii
 import hmac
 import hashlib
@@ -233,6 +234,21 @@ class IPSC(DatagramProtocol):
 
 
 if __name__ == '__main__':
-    for ipsc_network in NETWORK:
-        reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], IPSC(NETWORK[ipsc_network]))
+    parser = argparse.ArgumentParser(description="Start an IPSC client.")
+    parser.add_argument('-n', '--network', required=False)
+    args = parser.parse_args()
+
+    if args.network is not None:
+        if args.network in NETWORK:
+            print("Connecting to %s" % args.network)
+            reactor.listenUDP(NETWORK[args.network]['LOCAL']['PORT'], IPSC(NETWORK[args.network]))
+        else:
+            print("%s is not a configured ISPC network." % args.network)
+            exit()
+
+    else:  # connect to all
+        print("No network supplied, connecting to all networks.")
+        for ipsc_network in NETWORK:
+            reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], IPSC(NETWORK[ipsc_network]))
+
     reactor.run()
