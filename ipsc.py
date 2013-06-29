@@ -117,21 +117,21 @@ def hashed_packet(key, data):
     return (data + hash)
     
 def print_peer_list(_ipsc_network):
-  print('\t', _ipsc_network['LOCAL']['DESCRIPTION'])
-  for dictionary in _ipsc_network['PEERS']:
-    hex_address = dictionary['IP']
-    hex_port = dictionary['PORT']
-    hex_radio_id = dictionary['RADIO_ID']
-    hex_mode = dictionary['MODE']
-    
-    address = [int(hex_address[0:2], 16), int(hex_address[2:4], 16), int(hex_address[4:6], 16), int(hex_address[6:8], 16)]
-    port = int(hex_port, 16)
-    radio_id = int(hex_radio_id, 16)
-    
-    print ('\t', address[0],address[1],address[2],address[3], sep='.', end='\t')
-    print (port, radio_id, sep=':', end=' ')
-    print ("IPSC Mode:", hex_mode)
-  print()
+    print('\t', _ipsc_network['LOCAL']['DESCRIPTION'])
+    for dictionary in _ipsc_network['PEERS']:
+        hex_address = dictionary['IP']
+        hex_port = dictionary['PORT']
+        hex_radio_id = dictionary['RADIO_ID']
+        hex_mode = dictionary['MODE']
+
+        address = [int(hex_address[0:2], 16), int(hex_address[2:4], 16), int(hex_address[4:6], 16), int(hex_address[6:8], 16)]
+        port = int(hex_port, 16)
+        radio_id = int(hex_radio_id, 16)
+
+        print ('\t', address[0],address[1],address[2],address[3], sep='.', end='\t')
+        print (port, radio_id, sep=':', end=' ')
+        print ("IPSC Mode:", hex_mode)
+    print()
 
 class IPSC(DatagramProtocol):
     
