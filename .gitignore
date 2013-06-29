@@ -1,3 +1,5 @@
 .DS_Store
 .dropbox
 Icon
+my_ipsc_config.py
+*.pyc

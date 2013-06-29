@@ -62,84 +62,87 @@ logger = logging.getLogger('ipsc')
 
 
 # Data structure for holding IPSC information
-NETWORK = {
-    'IPSC1': {
-        'LOCAL': {
-            'DESCRIPTION': 'IPSC Network #1',
-            'MODE': b'\x6A',
-            'FLAGS': b'\x00\x00\x80\xDC',
-            'PORT': 50001,
-            'RADIO_ID': binascii.unhexlify('00000001'),
-            'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000000001')
+try:
+    from my_ipsc_config import NETWORK
+except ImportError:
+    NETWORK = {
+        'IPSC1': {
+            'LOCAL': {
+                'DESCRIPTION': 'IPSC Network #1',
+                'MODE': b'\x6A',
+                'FLAGS': b'\x00\x00\x80\xDC',
+                'PORT': 50001,
+                'RADIO_ID': binascii.unhexlify('00000001'),
+                'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000000001')
+            },
+            'MASTER': {
+                'IP': '1.1.1.1',
+                'MODE': b'\x6A',
+                'PORT': 50000,
+                'RADIO_ID': '',
+            },
+            'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
+                #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
+            ]      
         },
-        'MASTER': {
-            'IP': '1.1.1.1',
-            'MODE': b'\x6A',
-            'PORT': 50000,
-            'RADIO_ID': '',
+        'IPSC2': {
+            'LOCAL': {
+                'DESCRIPTION': 'IPSC Network #1',
+                'MODE': b'\x6A',
+                'FLAGS': b'\x00\x00\x80\xDC',
+                'PORT': 50002,
+                'RADIO_ID': binascii.unhexlify('00000002'),
+                'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000000022')
+            },
+            'MASTER': {
+                'IP': '2.2.2.2',
+                'MODE': b'\x6A',
+                'PORT': 50000,
+                'RADIO_ID': '',
+            },
+            'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
+                #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
+            ]        
         },
-        'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
-            #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
-        ]      
-    },
-    'IPSC2': {
-        'LOCAL': {
-            'DESCRIPTION': 'IPSC Network #1',
-            'MODE': b'\x6A',
-            'FLAGS': b'\x00\x00\x80\xDC',
-            'PORT': 50002,
-            'RADIO_ID': binascii.unhexlify('00000002'),
-            'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000000022')
+        'IPSC3': {
+            'LOCAL': {
+                'DESCRIPTION': 'IPSC Network #1',
+                'MODE': b'\x6A',
+                'FLAGS': b'\x00\x00\x80\xDC',
+                'PORT': 50003,
+                'RADIO_ID': binascii.unhexlify('00000003'),
+                'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000000333')
+            },
+            'MASTER': {
+                'IP': '3.3.3.3',
+                'MODE': b'\x6A',
+                'PORT': 50000,
+                'RADIO_ID': '',
+            },
+            'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
+                #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
+            ]        
         },
-        'MASTER': {
-            'IP': '2.2.2.2',
-            'MODE': b'\x6A',
-            'PORT': 50000,
-            'RADIO_ID': '',
-        },
-        'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
-            #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
-        ]        
-    },
-    'IPSC3': {
-        'LOCAL': {
-            'DESCRIPTION': 'IPSC Network #1',
-            'MODE': b'\x6A',
-            'FLAGS': b'\x00\x00\x80\xDC',
-            'PORT': 50003,
-            'RADIO_ID': binascii.unhexlify('00000003'),
-            'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000000333')
-        },
-        'MASTER': {
-            'IP': '3.3.3.3',
-            'MODE': b'\x6A',
-            'PORT': 50000,
-            'RADIO_ID': '',
-        },
-        'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
-            #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
-        ]        
-    },
-    'IPSC4': {
-        'LOCAL': {
-            'DESCRIPTION': 'IPSC Network #1',
-            'MODE': b'\x6A',
-            'FLAGS': b'\x00\x00\x80\xDC',
-            'PORT': 50004,
-            'RADIO_ID': binascii.unhexlify('00000004'),
-            'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000004444')
-        },
-        'MASTER': {
-            'IP': '4.4.4.4',
-            'MODE': b'\x6A',
-            'PORT': 50000,
-            'RADIO_ID': '',
-        },
-        'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
-            #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
-        ]        
+        'IPSC4': {
+            'LOCAL': {
+                'DESCRIPTION': 'IPSC Network #1',
+                'MODE': b'\x6A',
+                'FLAGS': b'\x00\x00\x80\xDC',
+                'PORT': 50004,
+                'RADIO_ID': binascii.unhexlify('00000004'),
+                'AUTH_KEY': binascii.unhexlify('0000000000000000000000000000000000004444')
+            },
+            'MASTER': {
+                'IP': '4.4.4.4',
+                'MODE': b'\x6A',
+                'PORT': 50000,
+                'RADIO_ID': '',
+            },
+            'PEERS': [  # each list entry will be a dictionary for IP, RADIO ID and PORT
+                #{'IP': '100.200.1.1', 'PORT': 50000, 'RADIO_ID': b'\x00\x00\x00\xFF'},
+            ]        
+        }
     }
-}
 
 
 # Known IPSC Message Types
