@@ -146,6 +146,8 @@ except ImportError:
 
 
 # Known IPSC Message Types
+REPEATER_1            = b'\x61' # Unknown, seen from peer repeater
+REPEATER_2            = b'\x62' # Unknown, seen from peer repeater
 RDAC_CTL              = b'\x70'
 GROUP_VOICE           = b'\x80'
 GROUP_DATA            = b'\x83'
@@ -161,6 +163,7 @@ MASTER_ALIVE_REQ      = b'\x96' # FROM peer TO master
 MASTER_ALIVE_REPLY    = b'\x97' # FROM master TO peer
 PEER_ALIVE_REQ        = b'\x98' # Peer keep alive request
 PEER_ALIVE_REPLY      = b'\x99' # Peer keep alive reply
+RDAC_CTL_2            = b'\x9A' # Yet another RDAC Type Seen
 
 # IPSC Version Information
 IPSC_OP_VER    = b'\x04\x03'         # 0x04, 0x03 -- seems to be current version of IPSC

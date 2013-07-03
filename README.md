@@ -26,6 +26,8 @@ Each peer will send keep-alives to each other peer in the IPSC network at an int
 **KNOWN IPSC PACKET TYPES:**  
 The following sections of this document will include various packet types. This is a list of currently known types and their meanings. Note: The names are arbitrarily chosen with the intention of being descriptive, and each is defined by what they've been "observed" to do in the wild.  
 
+	REPEATER_1                = 0x61        Unknown - Seen from peer repeater
+	REPEATER_2                = 0x62        Unknown - Seen from peer repeater	
 	RDAC_CTL         		  = 0x70		RDAC packets observed to use this type
 	GROUP_VOICE      		  = 0x80		This is a group voice call
 	GROUP_DATA       		  = 0x83		This is a group data call
@@ -41,6 +43,7 @@ The following sections of this document will include various packet types. This 
 	MASTER_ALIVE_REPLY        = 0x97		Master keep alive reply (from master)
 	PEER_ALIVE_REQ            = 0x98		Peer keep alive request (to peer)
 	PEER_ALIVE_REPLY          = 0x99        Peer keep alive reply (from peer)
+	RDAC_CTL_2                = 0x9A        Seen from an RDAC disconnecting
 
 
 
