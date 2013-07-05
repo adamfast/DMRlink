@@ -26,9 +26,10 @@ Each peer will send keep-alives to each other peer in the IPSC network at an int
 **KNOWN IPSC PACKET TYPES:**  
 The following sections of this document will include various packet types. This is a list of currently known types and their meanings. Note: The names are arbitrarily chosen with the intention of being descriptive, and each is defined by what they've been "observed" to do in the wild.  
 
-	REPEATER_1                = 0x61        Unknown - Seen from peer repeater
-	REPEATER_2                = 0x62        Unknown - Seen from peer repeater	
-	RDAC_CTL         		  = 0x70		RDAC packets observed to use this type
+	CALL_CTL_1                = 0x61        |
+	CALL_CTL_2                = 0x62        | Call control messages, exact use unknown
+	CALL_CTL_3                = 0x63        |	
+	XCMP_XNL         		  = 0x70		Control protocol messages
 	GROUP_VOICE      		  = 0x80		This is a group voice call
 	GROUP_DATA       		  = 0x83		This is a group data call
 	PVT_DATA         		  = 0x84		This is a private data call
@@ -43,7 +44,8 @@ The following sections of this document will include various packet types. This 
 	MASTER_ALIVE_REPLY        = 0x97		Master keep alive reply (from master)
 	PEER_ALIVE_REQ            = 0x98		Peer keep alive request (to peer)
 	PEER_ALIVE_REPLY          = 0x99        Peer keep alive reply (from peer)
-	RDAC_CTL_2                = 0x9A        Seen from an RDAC disconnecting
+	DE_REG_REQ                = 0x9a        De-registraiton request (to master or all?)
+	DE_REG_REPLY              = 0x9b        De-registration reply (from master or all?)
 
 
 
@@ -105,7 +107,7 @@ CAPABILITIES (BYTES 6-14):
 LINKING Status 1 byte
 Byte 1 - BIT FLAGS:
       xx.. .... = Peer Operational (01 only known valid value)
-      ..xx .... = MODE: 10 digital, 01 analog
+      ..xx .... = Peer MODE: 00 - No Radio, 01 - Analog, 10 - Digital
       .... xx.. = IPSC Slot 1: 10 on, 01 off 
       .... ..xx = IPSC Slot 2: 10 on, 01 off
 
