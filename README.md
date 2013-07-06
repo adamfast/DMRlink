@@ -104,38 +104,39 @@ PEER LIST RESPONSE:
 
 CAPABILITIES (BYTES 6-14):
 
-LINKING Status 1 byte
-Byte 1 - BIT FLAGS:
-      xx.. .... = Peer Operational (01 only known valid value)
-      ..xx .... = Peer MODE: 00 - No Radio, 01 - Analog, 10 - Digital
-      .... xx.. = IPSC Slot 1: 10 on, 01 off 
-      .... ..xx = IPSC Slot 2: 10 on, 01 off
+	LINKING Status 1 byte
+	Byte 1 - BIT FLAGS:
+	      xx.. .... = Peer Operational (01 only known valid value)
+	      ..xx .... = Peer MODE: 00 - No Radio, 01 - Analog, 10 - Digital
+	      .... xx.. = IPSC Slot 1: 10 on, 01 off 
+	      .... ..xx = IPSC Slot 2: 10 on, 01 off
 
-Service FLAGS: 4 bytes, Master replies = 6 bytes
-Byte 1 - 0x00  	= Unknown
-Byte 2 - 0x00	= Unknown
-Byte 3 - BIT FLAGS:
-      x... .... = Set to 1 if RDAC call
-      .x.. .... = Unknwon - default to 0
-      ..x. .... = 3rd Party Application? (set by c-Bridge, SMARTPTT)
-      ...x xxxx = Unknown - default to 0
-Byte 4 = BIT FLAGS:
-      x... .... = RDAC related? - default to 0
-      .x.. .... = RDAC related? - default to 0
-      ..x. .... = RDAC related? - default to 0
-      ...x .... = Set if packets are authenticated
-      .... x... = Set if voice calls are supported
-      .... .x.. = Set if data calls are supported
-      .... ..x. = Unknown - default to 0
-      .... ...x = Set if master
-   (the following only used in registration response from master)
-NUMBER of PEERS: 2 Bytes
-Byte 5 - 0x00	= Unknown
-Byte 6 - Number of Peers (not including us)
+	Service FLAGS: 4 bytes, Master replies = 6 bytes
+	Byte 1 - 0x00  	= Unknown
+	Byte 2 - 0x00	= Unknown
+	Byte 3 - BIT FLAGS:
+	      x... .... = Set to 1 if RDAC call
+	      .x.. .... = Unknwon - default to 0
+	      ..x. .... = 3rd Party Application? (set by c-Bridge, SMARTPTT)
+	      ...x xxxx = Unknown - default to 0
+	Byte 4 = BIT FLAGS:
+	      x... .... = RDAC related? - default to 0
+	      .x.. .... = RDAC related? - default to 0
+	      ..x. .... = RDAC related? - default to 0
+	      ...x .... = Set if packets are authenticated
+	      .... x... = Set if voice calls are supported
+	      .... .x.. = Set if data calls are supported
+	      .... ..x. = Unknown - default to 0
+	      .... ...x = Set if master
+	(the following only used in registration response from master)
 
-Protocol VERSION: 4 Bytes (These are pure guesses based on repeater and c-Bridge code revisions)
-Bytes 1-2 - 0x04, 0x03 = Current version? (numbering scheme unknown)
-Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
+	NUMBER of PEERS: 2 Bytes
+	Byte 5 - 0x00	= Unknown
+	Byte 6 - Number of Peers (not including us)
+
+	Protocol VERSION: 4 Bytes (These are pure guesses based on repeater and c-Bridge code revisions)
+	Bytes 1-2 - 0x04, 0x03 = Current version? (numbering scheme unknown)
+	Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
   
 **SAMPLE CODE:**  
   
