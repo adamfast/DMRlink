@@ -102,16 +102,19 @@ PEER LIST RESPONSE:
 
 *Number of Peers, oddly formatted, stripping most significant non-zero digit seems to produce the correct value, such as 0x2c = 44, or 4 peers; or 0x6e = 110, or 10 peers
 
-CAPABILITIES (BYTES 6-14):
+**CAPABILITIES: Bytes 6-14 (6-16 for master reg. reply):**
+(Displayed in most to least significant bytes)
 
-	LINKING Status 1 byte
+***LINKING STATUS: Byte 6***
+
 	Byte 1 - BIT FLAGS:
 	      xx.. .... = Peer Operational (01 only known valid value)
 	      ..xx .... = Peer MODE: 00 - No Radio, 01 - Analog, 10 - Digital
 	      .... xx.. = IPSC Slot 1: 10 on, 01 off 
 	      .... ..xx = IPSC Slot 2: 10 on, 01 off
 
-	Service FLAGS: 4 bytes, Master replies = 6 bytes
+***SERVICE FLAGS: Bytes 7-10 (or 7-12)***
+
 	Byte 1 - 0x00  	= Unknown
 	Byte 2 - 0x00	= Unknown
 	Byte 3 - BIT FLAGS:
@@ -128,13 +131,16 @@ CAPABILITIES (BYTES 6-14):
 	      .... .x.. = Set if data calls are supported
 	      .... ..x. = Unknown - default to 0
 	      .... ...x = Set if master
+	
 	(the following only used in registration response from master)
 
 	NUMBER of PEERS: 2 Bytes
 	Byte 5 - 0x00	= Unknown
 	Byte 6 - Number of Peers (not including us)
 
-	Protocol VERSION: 4 Bytes (These are pure guesses based on repeater and c-Bridge code revisions)
+***PROTOCOL VERSION: Bytes 11-14 (or 12-16)***
+(These are pure guesses based on repeater and c-Bridge code revisions)
+
 	Bytes 1-2 - 0x04, 0x03 = Current version? (numbering scheme unknown)
 	Bytes 3-4 = 0x04, 0x00 = Oldest supported version? (same as above)
   
