@@ -247,6 +247,7 @@ class IPSC(DatagramProtocol):
             self._config['MASTER']['STATUS']['CONNECTED'] = 2
             _num_peers = int(str(int(binascii.b2a_hex(data[5:7]), 16))[1:])
             logger.info('    There are %s peers in this IPSC Network', _num_peers)
+            del self._config['PEERS'][:]
             for i in range(7, (_num_peers*11)+7, 11):
                 self._config['PEERS'].append({
                 'RADIO_ID': binascii.b2a_hex(data[i:i+4]), 

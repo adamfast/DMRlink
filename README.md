@@ -118,14 +118,14 @@ PEER LIST RESPONSE:
 	Byte 1 - 0x00  	= Unknown
 	Byte 2 - 0x00	= Unknown
 	Byte 3 - BIT FLAGS:
-	      x... .... = Set to 1 if RDAC call
+	      x... .... = CBSK Message
 	      .x.. .... = Unknwon - default to 0
 	      ..x. .... = 3rd Party Application? (set by c-Bridge, SMARTPTT)
 	      ...x xxxx = Unknown - default to 0
 	Byte 4 = BIT FLAGS:
-	      x... .... = RDAC related? - default to 0
-	      .x.. .... = RDAC related? - default to 0
-	      ..x. .... = RDAC related? - default to 0
+	      x... .... = XCMP/XNL - default to 0
+	      .x.. .... = XCMP/XNL - default to 0
+	      ..x. .... = XCMP/XNL - default to 0
 	      ...x .... = Set if packets are authenticated
 	      .... x... = Set if voice calls are supported
 	      .... .x.. = Set if data calls are supported
