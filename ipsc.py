@@ -178,12 +178,17 @@ class IPSC(DatagramProtocol):
             self.transport.write(reg_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
             logger.info("->> Sending Registration to Master:%s:%sFrom:%s\n", self._config['MASTER']['IP'], self._config['MASTER']['PORT'], binascii.b2a_hex(self._config['LOCAL']['RADIO_ID']))
         
-        elif (_master_connected == 1):
-            peer_list_req_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.PEER_LIST_REQ_PKT)
-            self.transport.write(peer_list_req_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
-            logger.info("->> Peer List Reqested from Master:%s:%s\n", self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
+        elif (_master_connected in (1,2)):
+            if (_master_connected == 1):
+                peer_list_req_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.PEER_LIST_REQ_PKT)
+                self.transport.write(peer_list_req_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
+                logger.info("->> Peer List Reqested from Master:%s:%s\n", self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
 
-        elif (_master_connected == 1 or 2):
+            master_alive_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.MASTER_ALIVE_PKT)
+            self.transport.write(master_alive_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
+            logger.info("->> Master Keep Alive Sent To:%s:%s\n", self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
+
+        elif (_master_connected == 2):
             master_alive_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.MASTER_ALIVE_PKT)
             self.transport.write(master_alive_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
             logger.info("->> Master Keep Alive Sent To:%s:%s\n", self._config['MASTER']['IP'], self._config['MASTER']['PORT'])

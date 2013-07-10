@@ -119,16 +119,16 @@ PEER LIST RESPONSE:
 	Byte 2 - 0x00	= Unknown
 	Byte 3 - BIT FLAGS:
 	      x... .... = CBSK Message
-	      .x.. .... = Unknwon - default to 0
-	      ..x. .... = 3rd Party Application? (set by c-Bridge, SMARTPTT)
+	      .x.. .... = Repeater Call Monitoring
+	      ..x. .... = 3rd Party "Console" Application
 	      ...x xxxx = Unknown - default to 0
 	Byte 4 = BIT FLAGS:
-	      x... .... = XCMP/XNL - default to 0
-	      .x.. .... = XCMP/XNL - default to 0
-	      ..x. .... = XCMP/XNL - default to 0
+	      x... .... = XNL Connected (1=true)
+	      .x.. .... = XNL Master Device
+	      ..x. .... = XNL Slave Device
 	      ...x .... = Set if packets are authenticated
-	      .... x... = Set if voice calls are supported
-	      .... .x.. = Set if data calls are supported
+	      .... x... = Set if data calls are supported
+	      .... .x.. = Set if voice calls are supported
 	      .... ..x. = Unknown - default to 0
 	      .... ...x = Set if master
 	
