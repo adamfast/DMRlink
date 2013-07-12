@@ -31,6 +31,7 @@ The following sections of this document will include various packet types. This 
 	CALL_CTL_3                = 0x63        |	
 	XCMP_XNL         		  = 0x70		Control protocol messages
 	GROUP_VOICE      		  = 0x80		This is a group voice call
+	PVT_VOICE                 = 0x81        This is a private voice call
 	GROUP_DATA       		  = 0x83		This is a group data call
 	PVT_DATA         		  = 0x84		This is a private data call
 	RPT_WAKE_UP               = 0x85        Wakes up all repeaters on the IPSC
@@ -118,7 +119,7 @@ PEER LIST RESPONSE:
 	Byte 1 - 0x00  	= Unknown
 	Byte 2 - 0x00	= Unknown
 	Byte 3 - BIT FLAGS:
-	      x... .... = CBSK Message
+	      x... .... = CSBK Message
 	      .x.. .... = Repeater Call Monitoring
 	      ..x. .... = 3rd Party "Console" Application
 	      ...x xxxx = Unknown - default to 0
