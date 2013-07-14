@@ -64,69 +64,73 @@ There are various states, timers and counters associated with each. When peers o
   
 *COMMUNICATION WITH MASTER:*
 The following illustrates the communication that a peer (us, for example) has with the master. The peer must register, then send keep-alives at an arbitrary interval (usually 5 - 30 seconds). If more than some arbitrary number of keep-alives are missed, we should return to the beginning and attempt to register again -- but do NOT elimiate the peers list, as peers may still be active. The only additional communcation with the master is if the master sends an unsolicited peer list. In this case, we should update our peer list as appropriate and continue.
-                                  +-----------------+
-                                  |Send Registration|
-    +---------------------------->|Request To Master|<-------------+
-    |                             +--------+--------+              |
-    |                                      |                       |
-    |                                      v                       |
-    |                               +--------------+         +-----+------+
-    |                               |Did The Master|   NO    |Wait FW Open|
-    |                               |  Respond ?   +-------->|   Timer    |
-    |                               +----+-----+---+         +------------+
-    |                                    |     |
-    |                                    | YES |
-    |   +-------------+                  v     |
-    |   |Add 1 To Keep|     +----------------+ |             +-------------+
-    |   | Alive Missed|     |Send Master Keep| |             |Is Peer Count|
-    |   |   Counter   +---->|  Alive Request | +------------>|     > 1 ?   |
-    |   +-------------+     +-------+--------+               +------+------+
-    |         ^                   |         ^                       | YES
- YES|         | NO                v         |                       v
-+---+---------+--+      +------------+      |               +-----------------+
-| Is The Missed  |      |Wait FW Open|      |               |Request Peer List|
-|   Keep-Alive   |      |   Timer    |      |               |   From Master   |<-----+
-|Count Exceeded ?|      +-----+------+      |               +-------+---------+      |
-+----------------+                |         |                       |                |
-        ^                         v         |                       v                |
-        |             +--------------+     ++-------------+     +---------+          |
-        |        NO   |Did The Master| YES |Set Keep Alive|     |Peer List| NO       |
-        +-------------+  Respond ?   +---->| Counter To 0 |     |Received?+----------+
-                      +--------------+     +--------------+     +---------+
+
+									  +-----------------+
+									  |Send Registration|
+		+---------------------------->|Request To Master|<-------------+
+		|                             +--------+--------+              |
+		|                                      |                       |
+		|                                      v                       |
+		|                               +--------------+         +-----+------+
+		|                               |Did The Master|   NO    |Wait FW Open|
+		|                               |  Respond ?   +-------->|   Timer    |
+		|                               +----+-----+---+         +------------+
+		|                                    |     |
+		|                                    | YES |
+		|   +-------------+                  v     |
+		|   |Add 1 To Keep|     +----------------+ |             +-------------+
+		|   | Alive Missed|     |Send Master Keep| |             |Is Peer Count|
+		|   |   Counter   +---->|  Alive Request | +------------>|     > 1 ?   |
+		|   +-------------+     +-------+--------+               +------+------+
+		|         ^                   |         ^                       | YES
+	 YES|         | NO                v         |                       v
+	+---+---------+--+      +------------+      |               +-----------------+
+	| Is The Missed  |      |Wait FW Open|      |               |Request Peer List|
+	|   Keep-Alive   |      |   Timer    |      |               |   From Master   |<-----+
+	|Count Exceeded ?|      +-----+------+      |               +-------+---------+      |
+	+----------------+                |         |                       |                |
+			^                         v         |                       v                |
+			|             +--------------+     ++-------------+     +---------+          |
+			|        NO   |Did The Master| YES |Set Keep Alive|     |Peer List| NO       |
+			+-------------+  Respond ?   +---->| Counter To 0 |     |Received?+----------+
+						  +--------------+     +--------------+     +---------+
 
 *COMMUNICATION WITH PEERS:*
 Once we have registered with the master, it will send a peer list update to any existing peers. Those peers will **immediately** respond by sending peer registrations to us, and then keep alives once we answer. We should send responses to any such requests as long as we have the peer in our own peer list -- which means we may miss one while waiting for receipt of our own peer list from the master. Even though we receive registration requests and keep-alives from the peers, we should send the same to them, even though this is redundant, it is how we ensure that firewall UDP sessions remain open. A bit wonky, but elegant. For example, a peer may not have a firewall, so it only sends keep-alives every 30 seconds, but we may need to every 5; which we achieve by sending our own keep-alives based on our own timer. The diagram only shows the action for the *initial* peer list reply from the master. Unsolicited peer lists from the master should update the list, and take appropriate action: De-register peers not in the new list, or begin registration for new peers.
-                              +-----------------+                              +-------------+
-                              |Recieve Peer List|                              |Received Peer|
-                              |   From Master   |                              |Leave Notice?|
-                              +------+----------+                              +------+------+
-                                     |                                                |
-                                     v FOR EACH PEER                                  |
-                             +----------------------+                                 v
-                             |Send Peer Registration|                           +-----------+
-    +----------------------->|       Request        |<-----------+              |Remove Peer|
-    |                        +----------+-----------+            |              | From List |
-    |                                   |                        |              +-----------+
-    |                                   v                        |
-    |                         +---------------------+     +------+------+
-    |     +---------+         |Registration Response| NO  |Wait Firewall|
-    |     |+1 Missed|         |     Recieved ?      +---->|  Open Timer |
-    |     | Counter |         +---------+-----------+     +-------------+
-    |     +-------+-+                   |
-    |         ^   |                     v YES
-    |         |   |                +----------+
-    |         |   +--------------->|Send Peer |
-    |YES      |NO        +-------->|Keep Alive|
-+---+---------+--+ +-----+------+  +----+-----+
-|   Keep Alive   | | Set Missed |       |
-| Count Exceeded?| |Counter to 0|       |
-+----------------+ +------------+       |
-           NO ^      ^ YES              |
-              |      |                  v
-          +---+------+----+       +-------------+
-          |   Peer Keep   |       |Wait Firewall|
-          |Alive Received?|<------+  Open Timer |
-          +---------------+       +-------------+
+
+								  +-----------------+                              +-------------+
+								  |Recieve Peer List|                              |Received Peer|
+								  |   From Master   |                              |Leave Notice?|
+								  +------+----------+                              +------+------+
+										 |                                                |
+										 v FOR EACH PEER                                  |
+							 +----------------------+                                     v
+							 |Send Peer Registration|                                +-----------+
+	    +------------------->|       Request        |<-----------+                   |Remove Peer|
+	    |                    +----------+-----------+            |                   | From List |
+        |                               |                        |                   +-----------+
+        |                               v                        |
+        |                     +---------------------+     +------+------+
+        |     +---------+     |Registration Response| NO  |Wait Firewall|
+        |     |+1 Missed|     |     Recieved ?      +---->|  Open Timer |
+        |     | Counter |     +---------+-----------+     +-------------+
+        |     +-------+-+                   |
+        |         ^   |                     v YES
+        |         |   |                +----------+
+        |         |   +--------------->|Send Peer |
+	    |         |          +-------->|Keep Alive|
+		|         |          |         +----+-----+
+		|YES      |NO        |              |
+	+---+---------+--+ +-----+------+       |
+	|   Keep Alive   | | Set Missed |       |
+	| Count Exceeded?| |Counter to 0|       |
+	+----------------+ +------------+       |
+               NO ^      ^ YES              |
+                  |      |                  v
+              +---+------+----+       +-------------+
+              |   Peer Keep   |       |Wait Firewall|
+              |Alive Received?|<------+  Open Timer |
+              +---------------+       +-------------+
 
 
 **PACKET FORMATS:**  
