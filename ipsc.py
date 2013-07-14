@@ -144,6 +144,9 @@ class IPSC(DatagramProtocol):
             master_alive_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.MASTER_ALIVE_PKT)
             self.transport.write(master_alive_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
             logger.info("->> Master Keep-alive Sent To:%s:%s", self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
+            
+            for peer in self._config['PEERS']:
+                bob = 0
 
         else:
             logger.error("->> Master in UNKOWN STATE:%s:%s", self._config['MASTER']['IP'], self._config['MASTER']['PORT'])            
@@ -198,7 +201,7 @@ class IPSC(DatagramProtocol):
             #logger.info(binascii.b2a_hex(peer_reg_reply_packet))
 
         elif (_packettype == XCMP_XNL):
-            logger.warning("<<- XCMP_XNL Packet From:%s:%s - We did not indicate XCMP capable!", host, port)
+            logger.warning("<<- XCMP_XNL From:%s:%s, but we did not indicate XCMP capable!", host, port)
 
         elif (_packettype == PEER_LIST_REPLY):
             logger.info("<<- The Peer List has been Received from Master:%s:%s Setting Condition 2", host, port)
