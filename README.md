@@ -57,26 +57,78 @@ Most IPSC networks will be operated as "authenticated". This means that a key is
 	90000000016a000080dc04030400	b0ec45f4c3f8fb0c0b1d
 	
 
-**CONNECTION CREATION:**  
-The IPSC network truly "forms" when the first peer registers with the master. All peers register with the master in the same way, with a slight variation from the first peer. The registration and peer maintenance process is oulined below:  
+**CONNECTION CREATION AND MAINTENANCE:**  
+The IPSC network truly "forms" when the first peer registers with the master. All peers register with the master in the same way, with a slight variation from the first peer. Below is a descirption of the process and states in creating a connection, as a peer, and maitaining it.
+
+There are various states, timers and counters associated with each. When peers or the master send us requests, we should answer them immediatley. Our own communcation with them is timed, and may share the same timer. Counter values should be the same for every master and peer in an IPSC. They don't have to be, but that is what mother M does, and it saves a lot of resources.
   
-  
-	 * Peer Initiates connection to IPSC:
-		 PEER -> MASTER		(peer sends a registration request to the master)
-		 PEER <- MASTER		(master sends a registration reply)
-		 PEER -> MASTER		(peer sends keep alive request to the master)
-		 PEER <- MASTER		(peer receives keep alive response from the master)
-			if the registration response indicated there is more than one peer (which would have been the peer) in the IPSC network...
-		 PEER -> MASTER		(peer sends peer-list request to master)
-		 PEER <- MASTER		(master sends a list of all peers in the IPSC by radio ID, their IP addresses and UDP ports)
-		 PEER -> (ALL)		(peer begins exchanging keep alives with all other nodes in the IPSC based on the programmed interval)
-	
-	* Master updates the peer list to all nodes when there is a change:
-		MASTER -> (PEERS)	(Master sends update list to each peer)
-		...all peers begin registration and then keep-alives
-		
-	* ALL nodes continue sending/receiving keep alives to maintain the IPSC
-	
+*COMMUNICATION WITH MASTER:*
+The following illustrates the communication that a peer (us, for example) has with the master. The peer must register, then send keep-alives at an arbitrary interval (usually 5 - 30 seconds). If more than some arbitrary number of keep-alives are missed, we should return to the beginning and attempt to register again -- but do NOT elimiate the peers list, as peers may still be active. The only additional communcation with the master is if the master sends an unsolicited peer list. In this case, we should update our peer list as appropriate and continue.
+                                  +-----------------+
+                                  |Send Registration|
+    +---------------------------->|Request To Master|<-------------+
+    |                             +--------+--------+              |
+    |                                      |                       |
+    |                                      v                       |
+    |                               +--------------+         +-----+------+
+    |                               |Did The Master|   NO    |Wait FW Open|
+    |                               |  Respond ?   +-------->|   Timer    |
+    |                               +----+-----+---+         +------------+
+    |                                    |     |
+    |                                    | YES |
+    |   +-------------+                  v     |
+    |   |Add 1 To Keep|     +----------------+ |             +-------------+
+    |   | Alive Missed|     |Send Master Keep| |             |Is Peer Count|
+    |   |   Counter   +---->|  Alive Request | +------------>|     > 1 ?   |
+    |   +-------------+     +-------+--------+               +------+------+
+    |         ^                   |         ^                       | YES
+ YES|         | NO                v         |                       v
++---+---------+--+      +------------+      |               +-----------------+
+| Is The Missed  |      |Wait FW Open|      |               |Request Peer List|
+|   Keep-Alive   |      |   Timer    |      |               |   From Master   |<-----+
+|Count Exceeded ?|      +-----+------+      |               +-------+---------+      |
++----------------+                |         |                       |                |
+        ^                         v         |                       v                |
+        |             +--------------+     ++-------------+     +---------+          |
+        |        NO   |Did The Master| YES |Set Keep Alive|     |Peer List| NO       |
+        +-------------+  Respond ?   +---->| Counter To 0 |     |Received?+----------+
+                      +--------------+     +--------------+     +---------+
+
+*COMMUNICATION WITH PEERS:*
+Once we have registered with the master, it will send a peer list update to any existing peers. Those peers will **immediately** respond by sending peer registrations to us, and then keep alives once we answer. We should send responses to any such requests as long as we have the peer in our own peer list -- which means we may miss one while waiting for receipt of our own peer list from the master. Even though we receive registration requests and keep-alives from the peers, we should send the same to them, even though this is redundant, it is how we ensure that firewall UDP sessions remain open. A bit wonky, but elegant. For example, a peer may not have a firewall, so it only sends keep-alives every 30 seconds, but we may need to every 5; which we achieve by sending our own keep-alives based on our own timer. The diagram only shows the action for the *initial* peer list reply from the master. Unsolicited peer lists from the master should update the list, and take appropriate action: De-register peers not in the new list, or begin registration for new peers.
+                              +-----------------+                              +-------------+
+                              |Recieve Peer List|                              |Received Peer|
+                              |   From Master   |                              |Leave Notice?|
+                              +------+----------+                              +------+------+
+                                     |                                                |
+                                     v FOR EACH PEER                                  |
+                             +----------------------+                                 v
+                             |Send Peer Registration|                           +-----------+
+    +----------------------->|       Request        |<-----------+              |Remove Peer|
+    |                        +----------+-----------+            |              | From List |
+    |                                   |                        |              +-----------+
+    |                                   v                        |
+    |                         +---------------------+     +------+------+
+    |     +---------+         |Registration Response| NO  |Wait Firewall|
+    |     |+1 Missed|         |     Recieved ?      +---->|  Open Timer |
+    |     | Counter |         +---------+-----------+     +-------------+
+    |     +-------+-+                   |
+    |         ^   |                     v YES
+    |         |   |                +----------+
+    |         |   +--------------->|Send Peer |
+    |YES      |NO        +-------->|Keep Alive|
++---+---------+--+ +-----+------+  +----+-----+
+|   Keep Alive   | | Set Missed |       |
+| Count Exceeded?| |Counter to 0|       |
++----------------+ +------------+       |
+           NO ^      ^ YES              |
+              |      |                  v
+          +---+------+----+       +-------------+
+          |   Peer Keep   |       |Wait Firewall|
+          |Alive Received?|<------+  Open Timer |
+          +---------------+       +-------------+
+
+
 **PACKET FORMATS:**  
   
 REGISTRATION REQUESTS, KEEP-ALIVE REQUESTS AND RESPONSES:
