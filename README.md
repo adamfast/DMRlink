@@ -137,7 +137,7 @@ PEER LIST RESPONSE:
 
 	NUMBER of PEERS: 2 Bytes
 	Byte 5 - 0x00	= Unknown
-	Byte 6 - Number of Peers (not including us)
+	Byte 6 - Number of Peers (not including us - ODDLY FORMATTED!!!)
 
 ***PROTOCOL VERSION: Bytes 11-14 (or 12-16)***
 (These are pure guesses based on repeater and c-Bridge code revisions)
