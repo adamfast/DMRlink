@@ -1,4 +1,4 @@
-##PROJECT: Motorola IPSC Reverse Engineering.
+##PROJECT: DMR Repeater Internet Linking - Multi-Vendor.
 **PURPOSE:** Troubleshooting IPSC performance issues/possibly building an application gateway to extend IPSC beyond 15 repeaters.  
 **IMPACT:** Potential concern from Motorla Solutions, as IPSC is a proprietary  
 **METHOD:** Reverse engineering by pattern matching and process of elimination  
