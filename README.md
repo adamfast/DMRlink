@@ -1,3 +1,5 @@
+***This code actually works. If you stumbed across the project, this is what you most want to know: It's not a complete application, yet, but it does actually work and run without messing up your IPSC network! If you download it and try it, you shouldn't be disappointed like I was with every online repo I found that was supposed to be an IPSC client. Pay attention to requirements, there are several python modules needed, but none are esoteric.***
+
 ##PROJECT: DMR Repeater Internet Linking.
 **PURPOSE:** Troubleshooting IPSC performance issues/possibly building an application gateway to extend IPSC beyond 15 repeaters.  
 **IMPACT:** Potential concern from Motorla Solutions, as IPSC is a proprietary  
