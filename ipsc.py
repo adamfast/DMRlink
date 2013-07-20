@@ -162,7 +162,6 @@ class IPSC(DatagramProtocol):
         self._loop = self._call.start(self._config['LOCAL']['ALIVE_TIMER'])
 
 
-
 #************************************************
 #     FUNCTIONS FOR IPSC Network Engine
 #************************************************
