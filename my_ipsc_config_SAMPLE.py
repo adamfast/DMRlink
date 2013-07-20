@@ -2,33 +2,45 @@
 NETWORK = {
     'IPSC1': {
         'LOCAL': {
-            'DESCRIPTION': 'IPSC Network name',
             'MODE': b'\x6A',
             'FLAGS': b'\x00\x00\x00\x14',
             'PORT': 50001,
+            'NUM_PEERS': 0
             'ALIVE_TIMER': 5, # Seconds between keep-alives and registration attempts
+            'MAX_MISSED': 5, # Maximum number of keep-alives missed before de-registration
             'RADIO_ID': b'\x00\x00\x00\x0A',
             'AUTH_KEY': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+            'ENABLED': True,
+            'STATUS': {
+                'ACTIVE': False
+            }
         },
         'MASTER': {
             'IP': '1.2.3.4',
             'PORT': 50000,
+            'RADIO_ID': b'\x00\x00\x00\x00',
+            'MODE': b'\x00',
+            'FLAGS': b'\x00\x00\x00\x00',
             'STATUS': {
-                'RADIO_ID': b'\x00\x00\x00\x00',
-                'CONNECTED': 0,
+                'CONNECTED': False,
+                'PEER-LIST': False,
+                'KEEP_ALIVES_SENT': 0,
                 'KEEP_ALIVES_MISSED': 0,
-                'MODE': b'\x00',
-                'FLAGS': b'\x00\x00\x00\x00',
+                'KEEP_ALIVES_OUTSTANDING': 0
             }
         },
         'PEERS': []
 #        each list item contains {
 #           'IP': '100.200.1.1',
 #           'PORT': 50000,
-#           'RADIO_ID': b'\x00\x00\x00\xFF',
+#           'RADIO_ID': b'\x00\x00\x00\x00',
+#           'MODE': b'\x00,
+#           'FLAGS': b'\x00\x00\x00\x00',
 #           'STATUS': {
-#               'CONNECTED': 0,
-#               'KEEP_ALIVES_MISSED': 0
+#               'CONNECTED': False,
+#               'KEEP_ALIVES_SENT': 0,
+#               'KEEP_ALIVES_MISSED': 0,  
+#               'KEEP_ALIVES_OUTSTANDING': 0
 #               }
 #       }
     }
