@@ -46,7 +46,7 @@ dictConfig({
     'loggers': {
         'ipsc': {
 #            'handlers': ['file-timed', 'console-timed'],
-            'handlers': ['file-timed', 'console-timed'],
+            'handlers': ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
         }
