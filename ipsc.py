@@ -74,40 +74,41 @@ def print_mode_decode(_mode):
     ts2       = _mode & IPSC_TS2_MSK
     
     if link_op == 0b01000000:
-        logger.debug('\t\tPeer Operational')
+        logger.info('\t\tPeer Operational')
     elif link_op == 0b00000000:
-        logger.debug('\t\tPeer Not Operational')
+        logger.info('\t\tPeer Not Operational')
     else:
         logger.info('\t\tPeer Mode Invalid')
         
     if link_mode == 0b00000000:
-        logger.debug('\t\tNo RF Interface')
+        logger.info('\t\tNo RF Interface')
     elif link_mode == 0b00010000:
-        logger.debug('\t\tRadio in Analog Mode')
+        logger.info('\t\tRadio in Analog Mode')
     elif link_mode == 0b00100000:
-        logger.debug('\t\tRadio in Digital Mode')
+        logger.info('\t\tRadio in Digital Mode')
     else:
         logger.info('\t\tRadio Mode Invalid')
         
     if ts1 == 0b00001000:
-        logger.debug('\t\tIPSC Enabled on TS1')
+        logger.info('\t\tIPSC Enabled on TS1')
     
     if ts2 == 0b00000010:
-        logger.debug('\t\tIPSC Enabled on TS2')
+        logger.info('\t\tIPSC Enabled on TS2')
 
 
 # Gratuituous print-out of the peer list.. Pretty much debug stuff.
 #
 def print_peer_list(_network_name):
-    logger.debug('\t Peer List for: %s', _network_name)
+    _log = logger.info
+    _log('\t Peer List for: %s', _network_name)
     for dictionary in NETWORK[_network_name]['PEERS']:    
-        logger.debug('\tIP Address: %s:%s', dictionary['IP'], dictionary['PORT'])
-        logger.debug('\tRADIO ID:   %s ', int(binascii.b2a_hex(dictionary['RADIO_ID']), 16))
-        logger.debug('\tIPSC Mode:')
-        print_mode_decode(dictionary['RAW_MODE'])
-        logger.debug('\tConnection Status: %s', dictionary['STATUS']['CONNECTED'])
-        logger.debug('\tKeepAlives Missed: %s', dictionary['STATUS']['KEEP_ALIVES_MISSED'])
-        logger.debug('')
+        _log('\t  IP Address: %s:%s', dictionary['IP'], dictionary['PORT'])
+        _log('\t  RADIO ID:   %s ', int(binascii.b2a_hex(dictionary['RADIO_ID']), 16))
+        _log('\t  IPSC Mode:')
+        print_mode_decode(dictionary['MODE'])
+        _log('\t  Connection Status: %s', dictionary['STATUS']['CONNECTED'])
+        _log('\t  KeepAlives Missed: %s', dictionary['STATUS']['KEEP_ALIVES_MISSED'])
+        _log('')
         
 
 
@@ -185,7 +186,7 @@ class IPSC(DatagramProtocol):
                 'RADIO_ID': _data[i:i+4], 
                 'IP':       socket.inet_ntoa(hex_address), 
                 'PORT':     int(binascii.b2a_hex(_data[i+8:i+10]), 16), 
-                'RAW_MODE': _data[i+10:i+11],
+                'MODE':     _data[i+10:i+11],
                 'STATUS':   {'CONNECTED': 0, 'KEEP_ALIVES_MISSED': 0}
             })
         print_peer_list(self._network_name)
@@ -337,5 +338,6 @@ class IPSC(DatagramProtocol):
 if __name__ == '__main__':
     logger.debug('SYSTEM STARTING UP')
     for ipsc_network in NETWORK:
-        reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], IPSC(ipsc_network))
+        if (NETWORK[ipsc_network]['LOCAL']['ENABLED']):
+            reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], IPSC(ipsc_network))
     reactor.run()
