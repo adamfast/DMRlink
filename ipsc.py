@@ -133,21 +133,34 @@ class IPSC(DatagramProtocol):
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
             # Housekeeping: create references to the configuration and status data for this IPSC instance.
+            # Some configuration objects that are used frequently and have lengthy names are shortened
+            # such as (self._master_sock) expands to (self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
             #
             self._network_name = args[0]
             self._config = NETWORK[self._network_name]
+            #
+            self._local = self._config['LOCAL']
+            self._local_stat = self._local['STATUS']
+            self._local_id = self._local['RADIO_ID']
+            #
+            self._master = self._config['MASTER']
+            self._master_stat = self._master['STATUS']
+            self._master_sock = self._master['IP'], self._master['PORT']
+            #
+            self._peers = self._config['PEERS']
+            
             args = ()
             
             # Packet 'constructors' - builds the necessary control packets for this IPSC instance
             #
-            self.TS_FLAGS             = (self._config['LOCAL']['MODE'] + self._config['LOCAL']['FLAGS'])
-            self.MASTER_REG_REQ_PKT   = (MASTER_REG_REQ + self._config['LOCAL']['RADIO_ID'] + self.TS_FLAGS + IPSC_VER)
-            self.MASTER_ALIVE_PKT     = (MASTER_ALIVE_REQ + self._config['LOCAL']['RADIO_ID'] + self.TS_FLAGS + IPSC_VER)
-            self.PEER_LIST_REQ_PKT    = (PEER_LIST_REQ + self._config['LOCAL']['RADIO_ID'])
-            self.PEER_REG_REQ_PKT     = (PEER_REG_REQ + self._config['LOCAL']['RADIO_ID'] + IPSC_VER)
-            self.PEER_REG_REPLY_PKT   = (PEER_REG_REPLY + self._config['LOCAL']['RADIO_ID'] + IPSC_VER)
-            self.PEER_ALIVE_REQ_PKT   = (PEER_ALIVE_REQ + self._config['LOCAL']['RADIO_ID'] + self.TS_FLAGS)
-            self.PEER_ALIVE_REPLY_PKT = (PEER_ALIVE_REPLY + self._config['LOCAL']['RADIO_ID'] + self.TS_FLAGS)
+            self.TS_FLAGS             = (self._local['MODE'] + self._local['FLAGS'])
+            self.MASTER_REG_REQ_PKT   = (MASTER_REG_REQ + self._local_id + self.TS_FLAGS + IPSC_VER)
+            self.MASTER_ALIVE_PKT     = (MASTER_ALIVE_REQ + self._local_id + self.TS_FLAGS + IPSC_VER)
+            self.PEER_LIST_REQ_PKT    = (PEER_LIST_REQ + self._local_id)
+            self.PEER_REG_REQ_PKT     = (PEER_REG_REQ + self._local_id + IPSC_VER)
+            self.PEER_REG_REPLY_PKT   = (PEER_REG_REPLY + self._local_id + IPSC_VER)
+            self.PEER_ALIVE_REQ_PKT   = (PEER_ALIVE_REQ + self._local_id + self.TS_FLAGS)
+            self.PEER_ALIVE_REPLY_PKT = (PEER_ALIVE_REPLY + self._local_id + self.TS_FLAGS)
             self._peer_list_new = False      
         else:
             # If we didn't get called correctly, log it!
@@ -163,7 +176,7 @@ class IPSC(DatagramProtocol):
         # page, etc....
         #
         self._call = task.LoopingCall(self.timed_loop)
-        self._loop = self._call.start(self._config['LOCAL']['ALIVE_TIMER'])
+        self._loop = self._call.start(self._local['ALIVE_TIMER'])
 
 
 #************************************************
@@ -176,15 +189,15 @@ class IPSC(DatagramProtocol):
     #   Populate the peer information from the list
     #
     def peer_list_received(self, _data, (_host, _port)):
-        self._config['MASTER']['STATUS']['PEER-LIST'] = True
+        self._master_stat['PEER-LIST'] = True
         logger.info('<<- (%s) The Peer List has been Received from Master:%s:%s ', self._network_name, _host, _port)
         _num_peers = int(str(int(binascii.b2a_hex(_data[5:7]), 16))[1:])
-        self._config['LOCAL']['NUM_PEERS'] = _num_peers
+        self._local['NUM_PEERS'] = _num_peers
         logger.info('    There are %s peers in this IPSC Network', _num_peers)
-        del self._config['PEERS'][:]
+        del self._peers[:]
         for i in range(7, (_num_peers*11)+7, 11):
             hex_address = (_data[i+4:i+8])
-            self._config['PEERS'].append({
+            self._peers.append({
                 'RADIO_ID': _data[i:i+4], 
                 'IP':       socket.inet_ntoa(hex_address), 
                 'PORT':     int(binascii.b2a_hex(_data[i+8:i+10]), 16), 
@@ -203,55 +216,55 @@ class IPSC(DatagramProtocol):
         
         print_peer_list(self._network_name)
         
-        _master_connected = self._config['MASTER']['STATUS']['CONNECTED']
-        _peer_list_rx = self._config['MASTER']['STATUS']['PEER-LIST']
+        _master_connected = self._master_stat['CONNECTED']
+        _peer_list_rx = self._master_stat['PEER-LIST']
 
         if (_master_connected == False):
-            reg_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.MASTER_REG_REQ_PKT)
-            self.transport.write(reg_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
-            logger.info('->> (%s) Master Registration Request To:%s:%s From:%s', self._network_name, self._config['MASTER']['IP'], self._config['MASTER']['PORT'], binascii.b2a_hex(self._config['LOCAL']['RADIO_ID']))
+            reg_packet = hashed_packet(self._local['AUTH_KEY'], self.MASTER_REG_REQ_PKT)
+            self.transport.write(reg_packet, (self._master_sock))
+            logger.info('->> (%s) Master Registration Request To:%s From:%s', self._network_name, self._master_sock, binascii.b2a_hex(self._local_id))
         
         elif (_master_connected == True):
-            master_alive_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.MASTER_ALIVE_PKT)
-            self.transport.write(master_alive_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
-            logger.debug('->> (%s) Master Keep-alive %s Sent To:%s:%s', self._network_name, self._config['MASTER']['STATUS']['KEEP_ALIVES_SENT'], self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
-            self._config['MASTER']['STATUS']['KEEP_ALIVES_SENT'] += 1
+            master_alive_packet = hashed_packet(self._local['AUTH_KEY'], self.MASTER_ALIVE_PKT)
+            self.transport.write(master_alive_packet, (self._master_sock))
+            logger.debug('->> (%s) Master Keep-alive %s Sent To:%s:%s', self._network_name, self._master_stat['KEEP_ALIVES_SENT'], self._master_sock)
+            self._master_stat['KEEP_ALIVES_SENT'] += 1
             
-            if (self._config['MASTER']['STATUS']['KEEP_ALIVES_OUTSTANDING']) > 0:
-                self._config['MASTER']['STATUS']['KEEP_ALIVES_MISSED'] += 1
+            if (self._master_stat['KEEP_ALIVES_OUTSTANDING']) > 0:
+                self._master_stat['KEEP_ALIVES_MISSED'] += 1
             
-            if self._config['MASTER']['STATUS']['KEEP_ALIVES_OUTSTANDING'] >= self._config['LOCAL']['MAX_MISSED']:
-                self._config['MASTER']['STATUS']['CONNECTED'] = False
+            if self._master_stat['KEEP_ALIVES_OUTSTANDING'] >= self._local['MAX_MISSED']:
+                self._master_stat['CONNECTED'] = False
                 logger.error('Maximum Master Keep-Alives Missed -- De-registering the Master')
             
         else:
-            logger.error('->> (%s) Master in UNKOWN STATE:%s:%s', self._network_name, self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
+            logger.error('->> (%s) Master in UNKOWN STATE:%s:%s', self._network_name, self._master_sock)
                 
         if  ((_master_connected == True) and (_peer_list_rx == False)):     
-            peer_list_req_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.PEER_LIST_REQ_PKT)
-            self.transport.write(peer_list_req_packet, (self._config['MASTER']['IP'], self._config['MASTER']['PORT']))
-            logger.debug('->> (%s) List Reqested from Master:%s:%s', self._network_name, self._config['MASTER']['IP'], self._config['MASTER']['PORT'])
+            peer_list_req_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_LIST_REQ_PKT)
+            self.transport.write(peer_list_req_packet, (self._master_sock))
+            logger.debug('->> (%s) List Reqested from Master:%s:%s', self._network_name, self._master_sock)
 
 # Logic problems in the next if.... bad ones. Fix them.
         if (_peer_list_rx == True):
-            for peer in (self._config['PEERS']):
-                if (peer['RADIO_ID'] == self._config['LOCAL']['RADIO_ID']): # We are in the peer-list, but don't need to talk to ourselves
+            for peer in (self._peers):
+                if (peer['RADIO_ID'] == self._local_id): # We are in the peer-list, but don't need to talk to ourselves
                     continue
                 if peer['STATUS']['CONNECTED'] == False:
-                    peer_reg_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.PEER_REG_REQ_PKT)
+                    peer_reg_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REQ_PKT)
                     self.transport.write(peer_reg_packet, (peer['IP'], peer['PORT']))
-                    logger.debug('->> (%s) Peer Registration Request To:%s:%s From:%s', self._network_name, peer['IP'], peer['PORT'], binascii.b2a_hex(self._config['LOCAL']['RADIO_ID']))
+                    logger.debug('->> (%s) Peer Registration Request To:%s:%s From:%s', self._network_name, peer['IP'], peer['PORT'], binascii.b2a_hex(self._local_id))
                 elif peer['STATUS']['CONNECTED'] == True:
-                    peer_alive_req_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.PEER_ALIVE_REQ_PKT)
+                    peer_alive_req_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REQ_PKT)
                     self.transport.write(peer_alive_req_packet, (peer['IP'], peer['PORT']))
-                    logger.debug('->> (%s) Peer Keep-Alive Request To:%s:%s From:%s', self._network_name, peer['IP'], peer['PORT'], binascii.b2a_hex(self._config['LOCAL']['RADIO_ID']))
+                    logger.debug('->> (%s) Peer Keep-Alive Request To:%s:%s From:%s', self._network_name, peer['IP'], peer['PORT'], binascii.b2a_hex(self._local_id))
 
                     peer['STATUS']['KEEP_ALIVES_SENT'] += 1
             
                     if peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] > 0:
                         peer['STATUS']['KEEP_ALIVES_MISSED'] += 1
             
-                    if peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] >= self._config['LOCAL']['MAX_MISSED']:
+                    if peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] >= self._local['MAX_MISSED']:
                         peer['STATUS']['CONNECTED'] = False
                         logger.error('Maximum Peer Keep-Alives Missed -- De-registering the Peer')
         
@@ -268,8 +281,6 @@ class IPSC(DatagramProtocol):
     #
     def datagramReceived(self, data, (host, port)):
         logger.debug('datagram received') # temporary debugging to make sure this part runs
-        dest_ip = self._config['MASTER']['IP']
-        dest_port = self._config['MASTER']['PORT']
         #logger.debug('received %r from %s:%d', binascii.b2a_hex(data), host, port)
 
         _packettype = data[0:1]
@@ -277,7 +288,7 @@ class IPSC(DatagramProtocol):
 
         if (_packettype == PEER_ALIVE_REQ):
             logger.debug('<<- (%s) Peer Keep-alive Request From Peer ID %s at:%s:%s', self._network_name, int(binascii.b2a_hex(_peerid), 16), host, port)
-            peer_alive_reply_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.PEER_ALIVE_REPLY_PKT)
+            peer_alive_reply_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REPLY_PKT)
             self.transport.write(peer_alive_reply_packet, (host, port))
             logger.debug('->> (%s) Peer Keep-alive Reply sent To:%s:%s', self._network_name, host, port)
 
@@ -293,13 +304,13 @@ class IPSC(DatagramProtocol):
             logger.info('<<- (%s) Master Registration Packet Recieved', self._network_name)
 
         elif (_packettype == MASTER_REG_REPLY):
-            self._config['MASTER']['STATUS']['CONNECTED'] = True
-            self._config['MASTER']['STATUS']['KEEP_ALIVES_OUTSTANDING'] = 0
+            self._master_stat['CONNECTED'] = True
+            self._master_stat['KEEP_ALIVES_OUTSTANDING'] = 0
             logger.info('<<- (%s) Master Registration Reply From:%s:%s ', self._network_name, host, port)
 
         elif (_packettype == PEER_REG_REQ):
             logger.debug('<<- (%s) Peer Registration Request From Peer ID %s at:%s:%s', self._network_name, int(binascii.b2a_hex(_peerid), 16), host, port)
-            peer_reg_reply_packet = hashed_packet(self._config['LOCAL']['AUTH_KEY'], self.PEER_REG_REPLY_PKT)
+            peer_reg_reply_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REPLY_PKT)
             self.transport.write(peer_reg_reply_packet, (host, port))
             logger.debug('->> (%s) Peer Registration Reply Sent To:%s:%s', self._network_name, host, port)
 
@@ -350,7 +361,6 @@ class IPSC(DatagramProtocol):
 #************************************************
 
 if __name__ == '__main__':
-    logger.debug('SYSTEM STARTING UP')
     for ipsc_network in NETWORK:
         if (NETWORK[ipsc_network]['LOCAL']['ENABLED']):
             reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], IPSC(ipsc_network))
