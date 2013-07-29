@@ -61,7 +61,17 @@ def hashed_packet(_key, _data):
 # Take a RECEIVED packet, calculate the auth hash and verify authenticity
 #
 def validate_auth(_key, _data):
-    return
+    _log = logger.info
+    _payload = _data[:-10]
+    _hash = _data[-10:]
+    _chk_hash = binascii.unhexlify((hmac.new(_key,_payload,hashlib.sha1)).hexdigest()[:20])
+    
+    if _chk_hash == _hash:
+        _log('    AUTH: Valid   - Payload: %s, Hash: %s', binascii.hexlify(_payload), binascii.hexlify(_hash))
+        return True
+    else:
+        _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.hexlify(_payload), binascii.hexlify(_hash))
+        return False
 
 def process_peer_list(_data, _network):
     _log = logger.info
@@ -305,6 +315,10 @@ class IPSC(DatagramProtocol):
         _packettype = data[0:1]
         _peerid     = data[1:5]
         _dec_peerid = int(binascii.b2a_hex(_peerid), 16)
+        
+        if validate_auth(self._local['AUTH_KEY'], data) == False:
+            logger.error('AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', _packettype, _dec_peerid)
+            return
 
         if (_packettype == PEER_ALIVE_REQ):
             logger.debug('<<- (%s) Peer Keep-alive Request From Peer ID %s at:%s:%s', self._network, _dec_peerid, host, port)

@@ -43,6 +43,10 @@ NETWORK = {
 #           'PORT': 50000,
 #           'RADIO_ID': b'\x00\x00\x00\x00',
 #           'MODE': b'\x00,
+#           'PEER_OPER': False,
+#           'PEER_MODE': '',
+#           'TS1_LINK': False,
+#           'TS2_LINK': False,
 #           'FLAGS': b'\x00\x00\x00\x00',
 #           'STATUS': {
 #               'CONNECTED': False,
