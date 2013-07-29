@@ -47,7 +47,7 @@ dictConfig({
         'ipsc': {
 #            'handlers': ['file-timed', 'console-timed'],
             'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         }
     }
