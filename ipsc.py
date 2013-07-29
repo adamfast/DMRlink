@@ -51,11 +51,17 @@ except ImportError:
 #************************************************
 
 
+# Remove the hash from a paket and return the payload
+#
+def strip_hash(_data):
+    return _data[:-10]
+
+
 # Take a packet to be SENT, calcualte auth hash and return the whole thing
 #
 def hashed_packet(_key, _data):
     hash = binascii.unhexlify((hmac.new(_key,_data,hashlib.sha1)).hexdigest()[:20])
-    return (_data + hash)
+    return (_data + hash)    
     
     
 # Take a RECEIVED packet, calculate the auth hash and verify authenticity
@@ -73,6 +79,9 @@ def validate_auth(_key, _data):
         _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.hexlify(_payload), binascii.hexlify(_hash))
         return False
 
+# Take a recieved peer list and the network it belongs to, process and populate the
+# data structure in my_ipsc_config with the results.
+#
 def process_peer_list(_data, _network):
     _log = logger.info
     
@@ -89,7 +98,7 @@ def process_peer_list(_data, _network):
         hex_address  = (_data[i+4:i+8])
         hex_port     = (_data[i+8:i+10])
         hex_mode     = (_data[i+10:i+11])
-        decoded_mode = mode_decode(_network, hex_mode, hex_radio_id)
+        decoded_mode = mode_decode(hex_mode)
         NETWORK[_network]['PEERS'].append({
             'RADIO_ID':  hex_radio_id, 
             'IP':        socket.inet_ntoa(hex_address), 
@@ -102,7 +111,10 @@ def process_peer_list(_data, _network):
             'STATUS':    {'CONNECTED': False, 'KEEP_ALIVES_SENT': 0, 'KEEP_ALIVES_MISSED': 0, 'KEEP_ALIVES_OUTSTANDING': 0}
         })
 
-def mode_decode(_network, _mode, _peer):
+# Given a mode byte, decode the functions and return a tuple of results
+#
+def mode_decode(_mode):
+    _log = logger.debug
     _mode = int(binascii.b2a_hex(_mode), 16)
     link_op   = _mode & PEER_OP_MSK
     link_mode = _mode & PEER_MODE_MSK
@@ -115,7 +127,8 @@ def mode_decode(_network, _mode, _peer):
     elif link_op == 0b00000000:
         _peer_op = False
     else:
-        _log('*** (%s) Peer Operational Flag Invalid for: %s', _network, _peer)
+        _peer_op = False
+        
 
     # Determine the operational mode of the peer
     if   link_mode == 0b00000000:
@@ -125,7 +138,7 @@ def mode_decode(_network, _mode, _peer):
     elif link_mode == 0b00100000:
         _peer_mode = 'DIGITAL'
     else:
-        _log('*** (%s) Peer Mode Flag Invalid for: %s', _network, _peer)
+        _peer_node = 'NO_RADIO'
 
     # Determine whether or not timeslot 1 is linked
     if ts1 == 0b00001000:
