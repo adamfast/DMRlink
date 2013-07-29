@@ -135,10 +135,14 @@ def mode_decode(_network, _mode, _peer):
 
 # Gratuituous print-out of the peer list.. Pretty much debug stuff.
 #
-def print_peer_list(_network_name):
+def print_peer_list(_network):
     _log = logger.info
-    _log('\t Peer List for: %s', _network_name)
-    for dictionary in NETWORK[_network_name]['PEERS']:    
+    if not NETWORK[_network]['PEERS']:
+        _log('\tNo peer list yet for: %s', _network)
+        return
+    
+    _log('\tPeer List for: %s', _network)
+    for dictionary in NETWORK[_network]['PEERS']:    
         _log('\tIP Address: %s:%s', dictionary['IP'], dictionary['PORT'])
         _log('\tRADIO ID:   %s ', int(binascii.b2a_hex(dictionary['RADIO_ID']), 16))
         _log('\tIPSC Mode:')
