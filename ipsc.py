@@ -59,9 +59,7 @@ def strip_hash(_data):
 # Determine if the provided peer ID is valid for the provided network 
 #
 def valid_peer(_network, _peerid):
-    print('    %s' % binascii.b2a_hex(_peerid))
     for peer in NETWORK[_network]['PEERS']:
-        print(binascii.b2a_hex(peer['RADIO_ID']))
         if peer['RADIO_ID'] == _peerid:
             return True
     return True #MUST BE FIXED!!!!!! should return false, but there are other issues right now...
@@ -136,17 +134,14 @@ def mode_decode(_mode):
     link_op   = _mode & PEER_OP_MSK
     link_mode = _mode & PEER_MODE_MSK
     ts1       = _mode & IPSC_TS1_MSK
-    ts2       = _mode & IPSC_TS2_MSK
-    
+    ts2       = _mode & IPSC_TS2_MSK    
     # Determine whether or not the peer is operational
     if   link_op == 0b01000000:
         _peer_op = True
     elif link_op == 0b00000000:
         _peer_op = False
     else:
-        _peer_op = False
-        
-
+        _peer_op = False  
     # Determine the operational mode of the peer
     if   link_mode == 0b00000000:
         _peer_mode = 'NO_RADIO'
@@ -156,19 +151,16 @@ def mode_decode(_mode):
         _peer_mode = 'DIGITAL'
     else:
         _peer_node = 'NO_RADIO'
-
     # Determine whether or not timeslot 1 is linked
     if ts1 == 0b00001000:
          _ts1 = True
     else:
          _ts1 = False
-
     # Determine whether or not timeslot 2 is linked
     if ts2 == 0b00000010:
         _ts2 = True
     else:
-        _ts2 = False
-     
+        _ts2 = False  
      # Return a tuple with the decoded values   
     return _peer_op, _peer_mode, _ts1, _ts2
 
@@ -348,19 +340,22 @@ class IPSC(DatagramProtocol):
         if validate_auth(self._local['AUTH_KEY'], data) == False:
             logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
             return
-        
-        if self._master_stat['CONNECTED'] == True:
-            if valid_peer(self._network, _peerid) == False or valid_master(self._network, _peerid) == False:
-                logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
-                return
 
         if (_packettype == PEER_ALIVE_REQ):
+            if valid_peer(self._network, _peerid) == False:
+                logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
+                return
+        
             logger.debug('<<- (%s) Peer Keep-alive Request From Peer ID %s at:%s:%s', self._network, _dec_peerid, host, port)
             peer_alive_reply_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REPLY_PKT)
             self.transport.write(peer_alive_reply_packet, (host, port))
             logger.debug('->> (%s) Peer Keep-alive Reply sent To:%s:%s', self._network, host, port)
 
         elif (_packettype == MASTER_ALIVE_REPLY):
+            if valid_master(self._network, _peerid) == False:
+                logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
+                return
+                
             logger.debug('<<- (%s) Master Keep-alive Reply From: %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
             #### increment keep-alive outstanding here
 

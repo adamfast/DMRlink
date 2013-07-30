@@ -36,3 +36,40 @@ LINK_TYPE_IPSC        = b'\x04'
 
 # IPSC Version and Link Type are Used for a 4-byte version field in registration packets
 IPSC_VER              = LINK_TYPE_IPSC + IPSC_VER_19 + LINK_TYPE_IPSC + IPSC_VER_17
+
+# Conditions for accepting certain types of messages... the cornerstone of a secure IPSC system :)
+REQ_VALID_PEER = [
+    PEER_REG_REQ,
+    PEER_REG_REPLY
+]
+
+REQ_VALID_MASTER = [
+    MASTER_REG_REQ,
+    MASTER_REG_REPLY
+]
+
+REQ_MASTER_CONNECTED = [
+    CALL_CTL_1,
+    CALL_CTL_2,
+    CALL_CTL_3,
+    XCMP_XNL,
+    GROUP_VOICE,
+    PVT_VOICE,
+    GROUP_DATA,
+    GROUP_VOICE,
+    PVT_DATA,
+    RPT_WAKE_UP,
+    MASTER_ALIVE_REQ,
+    MASTER_ALIVE_REPLY,
+    DE_REG_REQ,
+    DE_REG_REPLY 
+]
+
+REQ_PEER_CONNECTED = [
+    PEER_ALIVE_REQ,
+    PEER_ALIVE_REPLY
+]
+
+REQ_VALID_MASTER_OR_PEER = [
+    REQ_VALID_PEER, REQ_VALID_MASTER
+]
