@@ -59,12 +59,20 @@ def strip_hash(_data):
 # Determine if the provided peer ID is valid for the provided network 
 #
 def valid_peer(_network, _peerid):
-    return True
+    print('    %s' % binascii.b2a_hex(_peerid))
+    for peer in NETWORK[_network]['PEERS']:
+        print(binascii.b2a_hex(peer['RADIO_ID']))
+        if peer['RADIO_ID'] == _peerid:
+            return True
+    return True #MUST BE FIXED!!!!!! should return false, but there are other issues right now...
 
 # Determine if the provided master ID is valid for the provided network
 #
 def valid_master(_network, _peerid):
-    return True
+    if NETWORK[_network]['MASTER']['RADIO_ID'] == _peerid:
+        return True
+    else:
+        return False
 
 # Take a packet to be SENT, calcualte auth hash and return the whole thing
 #
@@ -341,9 +349,10 @@ class IPSC(DatagramProtocol):
             logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
             return
         
-        if valid_peer(self._network, _peerid) == False or valid_master(self._network, _dec_peerid) == True:
-            logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
-            return
+        if self._master_stat['CONNECTED'] == True:
+            if valid_peer(self._network, _peerid) == False or valid_master(self._network, _peerid) == False:
+                logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
+                return
 
         if (_packettype == PEER_ALIVE_REQ):
             logger.debug('<<- (%s) Peer Keep-alive Request From Peer ID %s at:%s:%s', self._network, _dec_peerid, host, port)
@@ -363,6 +372,7 @@ class IPSC(DatagramProtocol):
             logger.debug('<<- (%s) Master Registration Packet Recieved', self._network)
 
         elif (_packettype == MASTER_REG_REPLY):
+            self._master['RADIO_ID'] = _peerid
             self._master_stat['CONNECTED'] = True
             self._master_stat['KEEP_ALIVES_OUTSTANDING'] = 0
             logger.debug('<<- (%s) Master Registration Reply From:%s:%s ', self._network, host, port)
