@@ -56,6 +56,10 @@ except ImportError:
 def strip_hash(_data):
     return _data[:-10]
 
+# 
+#
+def valid_peer(_network, _peerid):
+    return True
 
 # Take a packet to be SENT, calcualte auth hash and return the whole thing
 #
@@ -176,7 +180,7 @@ def print_peer_list(_network):
         _log('\tConnection Status:      %s', dictionary['STATUS']['CONNECTED'])
         _log('\tKeepAlives Sent:        %s', dictionary['STATUS']['KEEP_ALIVES_SENT'])
         _log('\tKeepAlives Outstanding: %s', dictionary['STATUS']['KEEP_ALIVES_OUTSTANDING'])
-        _log('\tKeepAlives Missed:      %s\n', dictionary['STATUS']['KEEP_ALIVES_MISSED'])
+        _log('\tKeepAlives Missed:      %s', dictionary['STATUS']['KEEP_ALIVES_MISSED'])
     _log('\n')
         
 
@@ -322,15 +326,18 @@ class IPSC(DatagramProtocol):
     # call a function or process immediately if only a few actions
     #
     def datagramReceived(self, data, (host, port)):
-        logger.debug('datagram received') # temporary debugging to make sure this part runs
-        #logger.debug('received %r from %s:%d', binascii.b2a_hex(data), host, port)
+        logger.debug('received %r from %s:%d', binascii.b2a_hex(data), host, port)
 
         _packettype = data[0:1]
         _peerid     = data[1:5]
         _dec_peerid = int(binascii.b2a_hex(_peerid), 16)
         
         if validate_auth(self._local['AUTH_KEY'], data) == False:
-            logger.error('AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', _packettype, _dec_peerid)
+            logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
+            return
+        
+        if valid_peer(self._network, _peerid) == False:
+            logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
             return
 
         if (_packettype == PEER_ALIVE_REQ):
