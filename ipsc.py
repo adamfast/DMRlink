@@ -56,9 +56,14 @@ except ImportError:
 def strip_hash(_data):
     return _data[:-10]
 
-# 
+# Determine if the provided peer ID is valid for the provided network 
 #
 def valid_peer(_network, _peerid):
+    return True
+
+# Determine if the provided master ID is valid for the provided network
+#
+def valid_master(_network, _peerid):
     return True
 
 # Take a packet to be SENT, calcualte auth hash and return the whole thing
@@ -336,7 +341,7 @@ class IPSC(DatagramProtocol):
             logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
             return
         
-        if valid_peer(self._network, _peerid) == False:
+        if valid_peer(self._network, _peerid) == False or valid_master(self._network, _dec_peerid) == True:
             logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
             return
 
