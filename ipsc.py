@@ -60,30 +60,30 @@ def strip_hash(_data):
 # Take a packet to be SENT, calcualte auth hash and return the whole thing
 #
 def hashed_packet(_key, _data):
-    hash = binascii.unhexlify((hmac.new(_key,_data,hashlib.sha1)).hexdigest()[:20])
+    hash = binascii.a2b_hex((hmac.new(_key,_data,hashlib.sha1)).hexdigest()[:20])
     return (_data + hash)    
     
     
 # Take a RECEIVED packet, calculate the auth hash and verify authenticity
 #
 def validate_auth(_key, _data):
-    _log = logger.info
+    _log = logger.debug
     _payload = _data[:-10]
     _hash = _data[-10:]
-    _chk_hash = binascii.unhexlify((hmac.new(_key,_payload,hashlib.sha1)).hexdigest()[:20])
+    _chk_hash = binascii.a2b_hex((hmac.new(_key,_payload,hashlib.sha1)).hexdigest()[:20])
     
     if _chk_hash == _hash:
-        _log('    AUTH: Valid   - Payload: %s, Hash: %s', binascii.hexlify(_payload), binascii.hexlify(_hash))
+        _log('    AUTH: Valid   - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
         return True
     else:
-        _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.hexlify(_payload), binascii.hexlify(_hash))
+        _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
         return False
 
 # Take a recieved peer list and the network it belongs to, process and populate the
 # data structure in my_ipsc_config with the results.
 #
 def process_peer_list(_data, _network):
-    _log = logger.info
+    _log = logger.debug
     
     NETWORK[_network]['MASTER']['STATUS']['PEER-LIST'] = True
     _num_peers = int(str(int(binascii.b2a_hex(_data[5:7]), 16))[1:])
