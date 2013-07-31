@@ -169,24 +169,18 @@ def mode_decode(_mode):
 #
 def print_peer_list(_network):
     _log = logger.info
+#    os.system('clear')
     if not NETWORK[_network]['PEERS']:
-        _log('\tNo peer list yet for: %s', _network)
+        print('No peer list yet for: {}' .format(_network))
         return
     
-    _log('\tPeer List for: %s', _network)
-    for dictionary in NETWORK[_network]['PEERS']:    
-        _log('\tIP Address: %s:%s', dictionary['IP'], dictionary['PORT'])
-        _log('\tRADIO ID:   %s ', int(binascii.b2a_hex(dictionary['RADIO_ID']), 16))
-        _log('\tIPSC Mode:')
-        _log('\t\tPeer Operational: %s', dictionary['PEER_OPER'])
-        _log('\t\tPeer Mode:        %s', dictionary['PEER_MODE'])
-        _log('\t\tPeer TS1 Linked:  %s', dictionary['TS1_LINK'])
-        _log('\t\tPeer TS2 Linked:  %s', dictionary['TS2_LINK'])
-        _log('\tConnection Status:      %s', dictionary['STATUS']['CONNECTED'])
-        _log('\tKeepAlives Sent:        %s', dictionary['STATUS']['KEEP_ALIVES_SENT'])
-        _log('\tKeepAlives Outstanding: %s', dictionary['STATUS']['KEEP_ALIVES_OUTSTANDING'])
-        _log('\tKeepAlives Missed:      %s', dictionary['STATUS']['KEEP_ALIVES_MISSED'])
-    _log('\n')
+    print('Peer List for: %s' % _network)
+    for dictionary in NETWORK[_network]['PEERS']:
+        print('\tRADIO ID: {}' .format(int(binascii.b2a_hex(dictionary['RADIO_ID']), 16)))
+        print('\t\tIP Address: {}:{}' .format(dictionary['IP'], dictionary['PORT']))
+        print('\t\tOperational: {},  Mode: {},  TS1 Link: {},  TS2 Link: {}' .format(dictionary['PEER_OPER'], dictionary['PEER_MODE'], dictionary['TS1_LINK'], dictionary['TS2_LINK']))
+        print('\t\tStatus: {},  KeepAlives Sent: {},  KeepAlives Outstanding: {},  KeepAlives Missed: {}' .format(dictionary['STATUS']['CONNECTED'], dictionary['STATUS']['KEEP_ALIVES_OUTSTANDING'], dictionary['STATUS']['KEEP_ALIVES_SENT'], dictionary['STATUS']['KEEP_ALIVES_MISSED']))
+    print('')
         
 
 
@@ -337,9 +331,10 @@ class IPSC(DatagramProtocol):
         _peerid     = data[1:5]
         _dec_peerid = int(binascii.b2a_hex(_peerid), 16)
         
-        if validate_auth(self._local['AUTH_KEY'], data) == False:
-            logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
-            return
+        if bool(self._local['AUTH_KEY']) == True:
+            if validate_auth(self._local['AUTH_KEY'], data) == False:
+                logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
+                return
 
         if (_packettype == PEER_ALIVE_REQ):
             if valid_peer(self._network, _peerid) == False:
