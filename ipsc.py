@@ -118,7 +118,8 @@ def process_peer_list(_data, _network):
 # NEXT TO-DO ITEM:
 #        if not in the current list, add it...
 #        if in the current list, but not in what we received, remove it... 
-        
+#        then take out the he ugliness that is below here (and up above where it deletes the whol list)
+
         NETWORK[_network]['PEERS'].append({
             'RADIO_ID':  hex_radio_id, 
             'IP':        socket.inet_ntoa(hex_address), 
