@@ -119,6 +119,10 @@ def process_peer_list(_data, _network):
 #        if not in the current list, add it...
 #        if in the current list, but not in what we received, remove it... 
 #        then take out the he ugliness that is below here (and up above where it deletes the whol list)
+#        for radio_id in NETWORK[_network]['PEERS']:
+#            print(binascii.b2a_hex(radio_id['RADIO_ID']))
+#            if hex_radio_id in radio_id['RADIO_ID']:
+#                print('---->', radio_id)  
 
         NETWORK[_network]['PEERS'].append({
             'RADIO_ID':  hex_radio_id, 
