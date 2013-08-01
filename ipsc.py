@@ -336,7 +336,13 @@ class IPSC(DatagramProtocol):
                 logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
                 return
 
-        if (_packettype == PEER_ALIVE_REQ):
+        if (_packettype == GROUP_VOICE):
+            if not(valid_master(self._network, _peerid) == False or valid_peer(self._network, _peerid) == False):
+                logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
+                return
+            logger.debug('<<- (%s) Group Voice Packet From:%s:%s', self._network, host, port)
+
+        elif (_packettype == PEER_ALIVE_REQ):
             if valid_peer(self._network, _peerid) == False:
                 logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
                 return
@@ -352,11 +358,11 @@ class IPSC(DatagramProtocol):
                 return
                 
             logger.debug('<<- (%s) Master Keep-alive Reply From: %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
-            #### increment keep-alive outstanding here
+            #### reset keep-alive outstanding here
 
         elif (_packettype == PEER_ALIVE_REPLY):
             logger.debug('<<- (%s) Peer Keep-alive Reply From:   %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
-            #### increment keep-alive outstanding here
+            #### reset keep-alive outstanding here
             
         elif (_packettype == MASTER_REG_REQ):
             logger.debug('<<- (%s) Master Registration Packet Recieved', self._network)
@@ -384,9 +390,6 @@ class IPSC(DatagramProtocol):
 
         elif (_packettype == PEER_LIST_REPLY):
             process_peer_list(data, self._network)
-            
-        elif (_packettype == GROUP_VOICE):
-            logger.debug('<<- (%s) Group Voice Packet From:%s:%s', self._network, host, port)
             
         elif (_packettype == PVT_VOICE):
             logger.debug('<<- (%s) Voice Packet From:%s:%s', self._network, host, port)
