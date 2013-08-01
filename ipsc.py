@@ -277,7 +277,6 @@ class IPSC(DatagramProtocol):
             master_alive_packet = hashed_packet(self._local['AUTH_KEY'], self.MASTER_ALIVE_PKT)
             self.transport.write(master_alive_packet, (self._master_sock))
             logger.debug('->> (%s) Master Keep-alive %s Sent To:%s', self._network, self._master_stat['KEEP_ALIVES_SENT'], self._master_sock)
-            self._master_stat['KEEP_ALIVES_SENT'] += 1
             
             if (self._master_stat['KEEP_ALIVES_OUTSTANDING']) > 0:
                 self._master_stat['KEEP_ALIVES_MISSED'] += 1
@@ -285,6 +284,9 @@ class IPSC(DatagramProtocol):
             if self._master_stat['KEEP_ALIVES_OUTSTANDING'] >= self._local['MAX_MISSED']:
                 self._master_stat['CONNECTED'] = False
                 logger.error('Maximum Master Keep-Alives Missed -- De-registering the Master')
+                
+            self._master_stat['KEEP_ALIVES_SENT'] += 1
+            self._master_stat['KEEP_ALIVES_OUTSTANDING'] += 1
             
         else:
             logger.error('->> (%s) Master in UNKOWN STATE:%s:%s', self._network, self._master_sock)
@@ -308,14 +310,16 @@ class IPSC(DatagramProtocol):
                     self.transport.write(peer_alive_req_packet, (peer['IP'], peer['PORT']))
                     logger.debug('->> (%s) Peer Keep-Alive Request To:%s:%s From:%s', self._network, peer['IP'], peer['PORT'], binascii.b2a_hex(self._local_id))
 
-                    peer['STATUS']['KEEP_ALIVES_SENT'] += 1
-            
                     if peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] > 0:
                         peer['STATUS']['KEEP_ALIVES_MISSED'] += 1
             
                     if peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] >= self._local['MAX_MISSED']:
                         peer['STATUS']['CONNECTED'] = False
+                        self._peers.remove(peer)
                         logger.error('Maximum Peer Keep-Alives Missed -- De-registering the Peer')
+                    
+                    peer['STATUS']['KEEP_ALIVES_SENT'] += 1
+                    peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] += 1
         
         logger.debug('(%s) timed loop finished', self._network) # temporary debugging to make sure this part runs
     
@@ -362,11 +366,13 @@ class IPSC(DatagramProtocol):
                 return
                 
             logger.debug('<<- (%s) Master Keep-alive Reply From: %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
-            #### reset keep-alive outstanding here
+            self._master_stat['KEEP_ALIVES_OUTSTANDING'] = 0
 
         elif (_packettype == PEER_ALIVE_REPLY):
             logger.debug('<<- (%s) Peer Keep-alive Reply From:   %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
-            #### reset keep-alive outstanding here
+            for peer in self._config['PEERS']:
+                if peer['RADIO_ID'] == _peerid:
+                    peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] = 0     
             
         elif (_packettype == MASTER_REG_REQ):
             logger.debug('<<- (%s) Master Registration Packet Recieved', self._network)
