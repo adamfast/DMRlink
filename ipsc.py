@@ -176,7 +176,11 @@ def print_peer_list(_network):
     
     print('Peer List for: %s' % _network)
     for dictionary in NETWORK[_network]['PEERS']:
-        print('\tRADIO ID: {}' .format(int(binascii.b2a_hex(dictionary['RADIO_ID']), 16)))
+        if dictionary['RADIO_ID'] == NETWORK[_network]['LOCAL']['RADIO_ID']:
+            me = '(self)'
+        else:
+            me = ''
+        print('\tRADIO ID: {} {}' .format(int(binascii.b2a_hex(dictionary['RADIO_ID']), 16), me))
         print('\t\tIP Address: {}:{}' .format(dictionary['IP'], dictionary['PORT']))
         print('\t\tOperational: {},  Mode: {},  TS1 Link: {},  TS2 Link: {}' .format(dictionary['PEER_OPER'], dictionary['PEER_MODE'], dictionary['TS1_LINK'], dictionary['TS2_LINK']))
         print('\t\tStatus: {},  KeepAlives Sent: {},  KeepAlives Outstanding: {},  KeepAlives Missed: {}' .format(dictionary['STATUS']['CONNECTED'], dictionary['STATUS']['KEEP_ALIVES_SENT'], dictionary['STATUS']['KEEP_ALIVES_OUTSTANDING'], dictionary['STATUS']['KEEP_ALIVES_MISSED']))
