@@ -114,6 +114,11 @@ def process_peer_list(_data, _network):
         hex_port     = (_data[i+8:i+10])
         hex_mode     = (_data[i+10:i+11])
         decoded_mode = mode_decode(hex_mode)
+        
+# NEXT TO-DO ITEM:
+#        if not in the current list, add it...
+#        if in the current list, but not in what we received, remove it... 
+        
         NETWORK[_network]['PEERS'].append({
             'RADIO_ID':  hex_radio_id, 
             'IP':        socket.inet_ntoa(hex_address), 
