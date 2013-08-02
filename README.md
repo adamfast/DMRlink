@@ -223,3 +223,12 @@ PEER LIST RESPONSE:
 		
 		FULL_PAYLOAD = add_authentication(PAYLOAD, KEY)
 		print(binascii.b2a_hex(FULL_PAYLOAD))
+
+
+Copyright (c) 2013 Cortney T. Buffington, N0MJS n0mjs@me.com
+
+This work is licensed under the Creative Commons Attribution-ShareAlike
+3.0 Unported License.To view a copy of this license, visit
+http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to
+Creative Commons, 444 Castro Street, Suite 900, Mountain View,
+California, 94041, USA.

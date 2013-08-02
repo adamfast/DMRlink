@@ -43,3 +43,12 @@ MASTER: (This appears to be the peer list)
 91 0004c2c0 6a 0000805d0004 0403 0400 -- be c9 27 21 8f 07 a2 23 3f 07
 
 91 0004c2c0 6a 0000805d0004 0402 0400 -- 2e da 60 20 62 2d 6e b5 9e 6c
+
+------------------------------------------------------------
+Copyright (c) 2013 Cortney T. Buffington, N0MJS n0mjs@me.com
+
+This work is licensed under the Creative Commons Attribution-ShareAlike
+3.0 Unported License.To view a copy of this license, visit
+http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to
+Creative Commons, 444 Castro Street, Suite 900, Mountain View,
+California, 94041, USA.
