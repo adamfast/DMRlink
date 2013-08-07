@@ -109,14 +109,10 @@ def validate_auth(_key, _data):
 # Take a recieved peer list and the network it belongs to, process and populate the
 # data structure in my_ipsc_config with the results.
 #
-def process_peer_list(_data, _network):
+def process_peer_list(_data, _network, _peer_list):
     _log = logger.debug
     
-    _peer_list = []
-    _radio_ids = []
-    
-    for _peer_data in NETWORK[_network]['PEERS']:
-        _radio_ids.append(_peer_data['RADIO_ID'])
+    print(_peer_list)
     
     NETWORK[_network]['MASTER']['STATUS']['PEER-LIST'] = True
     _num_peers = int(str(int(binascii.b2a_hex(_data[5:7]), 16))[1:])
@@ -132,7 +128,7 @@ def process_peer_list(_data, _network):
         hex_mode     = (_data[i+10:i+11])
         decoded_mode = mode_decode(hex_mode)
 
-        if hex_radio_id not in _radio_ids:
+        if hex_radio_id not in _peer_list:
             _peer_list.append(hex_radio_id)
             NETWORK[_network]['PEERS'].append({
                 'RADIO_ID':  hex_radio_id, 
@@ -145,7 +141,11 @@ def process_peer_list(_data, _network):
                 'TS2_LINK':  decoded_mode[3],
                 'STATUS':    {'CONNECTED': False, 'KEEP_ALIVES_SENT': 0, 'KEEP_ALIVES_MISSED': 0, 'KEEP_ALIVES_OUTSTANDING': 0}
             })
+    
+    for peer in NETWORK[_network]['PEERS']:
+        print(binascii.b2a_hex(peer['RADIO_ID']))
             
+    print(_peer_list)     
     return _peer_list
 
 
@@ -339,8 +339,9 @@ class IPSC(DatagramProtocol):
             
                     if peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] >= self._local['MAX_MISSED']:
                         peer['STATUS']['CONNECTED'] = False
+                        self._peer_list.remove(peer['RADIO_ID'])
                         self._peers.remove(peer)
-                        logger.error('Maximum Peer Keep-Alives Missed -- De-registering the Peer')
+                        logger.error('Maximum Peer Keep-Alives Missed -- De-registering the Peer: %s', peer)
                     
                     peer['STATUS']['KEEP_ALIVES_SENT'] += 1
                     peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] += 1
@@ -424,7 +425,7 @@ class IPSC(DatagramProtocol):
             logger.debug('<<- (%s) XCMP_XNL From:%s:%s, but we did not indicate XCMP capable!', self._network, host, port)
 
         elif (_packettype == PEER_LIST_REPLY):
-            self._peer_list = process_peer_list(data, self._network)
+            self._peer_list = process_peer_list(data, self._network, self._peer_list)
             print(self._peer_list)
             
         elif (_packettype == PVT_VOICE):
