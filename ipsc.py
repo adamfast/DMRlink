@@ -112,7 +112,9 @@ def validate_auth(_key, _data):
 def process_peer_list(_data, _network):
     _log = logger.debug
     
+    _peer_list = []
     _radio_ids = []
+    
     for _peer_data in NETWORK[_network]['PEERS']:
         _radio_ids.append(_peer_data['RADIO_ID'])
     
@@ -131,6 +133,7 @@ def process_peer_list(_data, _network):
         decoded_mode = mode_decode(hex_mode)
 
         if hex_radio_id not in _radio_ids:
+            _peer_list.append(hex_radio_id)
             NETWORK[_network]['PEERS'].append({
                 'RADIO_ID':  hex_radio_id, 
                 'IP':        socket.inet_ntoa(hex_address), 
@@ -143,10 +146,7 @@ def process_peer_list(_data, _network):
                 'STATUS':    {'CONNECTED': False, 'KEEP_ALIVES_SENT': 0, 'KEEP_ALIVES_MISSED': 0, 'KEEP_ALIVES_OUTSTANDING': 0}
             })
             
-    _radio_ids = []
-    for _peer_data in NETWORK[_network]['PEERS']:
-        _radio_ids.append(_peer_data['RADIO_ID'])
-    return _radio_ids
+    return _peer_list
 
 
 # Given a mode byte, decode the functions and return a tuple of results
