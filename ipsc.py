@@ -16,6 +16,7 @@ import binascii
 import hmac
 import hashlib
 import socket
+
 #from logging.config import dictConfig
 #import logging
 
@@ -64,13 +65,14 @@ except ImportError:
 def strip_hash(_data):
     return _data[:-10]
 
+
 # Determine if the provided peer ID is valid for the provided network 
 #
-def valid_peer(_network, _peerid):
-    for peer in NETWORK[_network]['PEERS']:
-        if peer['RADIO_ID'] == _peerid:
-            return True
-    return True #MUST BE FIXED!!!!!! should return false, but there are other issues right now...
+def valid_peer(_peer_list, _peerid):
+    if _peerid in _peer_list:
+        return True
+    return False
+
 
 # Determine if the provided master ID is valid for the provided network
 #
@@ -79,6 +81,7 @@ def valid_master(_network, _peerid):
         return True
     else:
         return False
+
 
 # Take a packet to be SENT, calcualte auth hash and return the whole thing
 #
@@ -102,11 +105,16 @@ def validate_auth(_key, _data):
         _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
         return False
 
+
 # Take a recieved peer list and the network it belongs to, process and populate the
 # data structure in my_ipsc_config with the results.
 #
 def process_peer_list(_data, _network):
     _log = logger.debug
+    
+    _radio_ids = []
+    for _peer_data in NETWORK[_network]['PEERS']:
+        _radio_ids.append(_peer_data['RADIO_ID'])
     
     NETWORK[_network]['MASTER']['STATUS']['PEER-LIST'] = True
     _num_peers = int(str(int(binascii.b2a_hex(_data[5:7]), 16))[1:])
@@ -115,34 +123,31 @@ def process_peer_list(_data, _network):
     _log('<<- (%s) The Peer List has been Received from Master\n%s \
     There are %s peers in this IPSC Network', _network, (' '*(len(_network)+7)), _num_peers)
     
-    del NETWORK[_network]['PEERS'][:]
     for i in range(7, (_num_peers*11)+7, 11):
         hex_radio_id = (_data[i:i+4])
         hex_address  = (_data[i+4:i+8])
         hex_port     = (_data[i+8:i+10])
         hex_mode     = (_data[i+10:i+11])
         decoded_mode = mode_decode(hex_mode)
-        
-# NEXT TO-DO ITEM:
-#        if not in the current list, add it...
-#        if in the current list, but not in what we received, remove it... 
-#        then take out the he ugliness that is below here (and up above where it deletes the whol list)
-#        for radio_id in NETWORK[_network]['PEERS']:
-#            print(binascii.b2a_hex(radio_id['RADIO_ID']))
-#            if hex_radio_id in radio_id['RADIO_ID']:
-#                print('---->', radio_id)  
 
-        NETWORK[_network]['PEERS'].append({
-            'RADIO_ID':  hex_radio_id, 
-            'IP':        socket.inet_ntoa(hex_address), 
-            'PORT':      int(binascii.b2a_hex(hex_port), 16), 
-            'MODE':      hex_mode,
-            'PEER_OPER': decoded_mode[0],
-            'PEER_MODE': decoded_mode[1],
-            'TS1_LINK':  decoded_mode[2],
-            'TS2_LINK':  decoded_mode[3],
-            'STATUS':    {'CONNECTED': False, 'KEEP_ALIVES_SENT': 0, 'KEEP_ALIVES_MISSED': 0, 'KEEP_ALIVES_OUTSTANDING': 0}
-        })
+        if hex_radio_id not in _radio_ids:
+            NETWORK[_network]['PEERS'].append({
+                'RADIO_ID':  hex_radio_id, 
+                'IP':        socket.inet_ntoa(hex_address), 
+                'PORT':      int(binascii.b2a_hex(hex_port), 16), 
+                'MODE':      hex_mode,
+                'PEER_OPER': decoded_mode[0],
+                'PEER_MODE': decoded_mode[1],
+                'TS1_LINK':  decoded_mode[2],
+                'TS2_LINK':  decoded_mode[3],
+                'STATUS':    {'CONNECTED': False, 'KEEP_ALIVES_SENT': 0, 'KEEP_ALIVES_MISSED': 0, 'KEEP_ALIVES_OUTSTANDING': 0}
+            })
+            
+    _radio_ids = []
+    for _peer_data in NETWORK[_network]['PEERS']:
+        _radio_ids.append(_peer_data['RADIO_ID'])
+    return _radio_ids
+
 
 # Given a mode byte, decode the functions and return a tuple of results
 #
@@ -239,6 +244,8 @@ class IPSC(DatagramProtocol):
             self._master_sock = self._master['IP'], self._master['PORT']
             #
             self._peers = self._config['PEERS']
+            #
+            self._peer_list = []
             
             args = ()
             
@@ -314,7 +321,6 @@ class IPSC(DatagramProtocol):
             self.transport.write(peer_list_req_packet, (self._master_sock))
             logger.debug('->> (%s) List Reqested from Master:%s', self._network, self._master_sock)
 
-# Logic problems in the next if.... bad ones. Fix them.
         if (_peer_list_rx == True):
             for peer in (self._peers):
                 if (peer['RADIO_ID'] == self._local_id): # We are in the peer-list, but don't need to talk to ourselves
@@ -363,14 +369,15 @@ class IPSC(DatagramProtocol):
                 return
 
         if (_packettype == GROUP_VOICE):
-            if not(valid_master(self._network, _peerid) == False or valid_peer(self._network, _peerid) == False):
+            if not(valid_master(self._network, _peerid) == False or valid_peer(self._peer_list, _peerid) == False):
                 logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
                 return
             logger.debug('<<- (%s) Group Voice Packet From:%s:%s', self._network, host, port)
 
         elif (_packettype == PEER_ALIVE_REQ):
-            if valid_peer(self._network, _peerid) == False:
-                logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
+            if valid_peer(self._peer_list, _peerid) == False:
+                
+                logger.warning('(%s) PeerError: Peer %s not in peer-list: %s', self._network, _dec_peerid, self._peer_list)
                 return
         
             logger.debug('<<- (%s) Peer Keep-alive Request From Peer ID %s at:%s:%s', self._network, _dec_peerid, host, port)
@@ -380,7 +387,7 @@ class IPSC(DatagramProtocol):
 
         elif (_packettype == MASTER_ALIVE_REPLY):
             if valid_master(self._network, _peerid) == False:
-                logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
+                logger.warning('(%s) PeerError: Peer %s not in peer-list: %s', self._network, _dec_peerid, self._peer_list)
                 return
                 
             logger.debug('<<- (%s) Master Keep-alive Reply From: %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
@@ -417,7 +424,8 @@ class IPSC(DatagramProtocol):
             logger.debug('<<- (%s) XCMP_XNL From:%s:%s, but we did not indicate XCMP capable!', self._network, host, port)
 
         elif (_packettype == PEER_LIST_REPLY):
-            process_peer_list(data, self._network)
+            self._peer_list = process_peer_list(data, self._network)
+            print(self._peer_list)
             
         elif (_packettype == PVT_VOICE):
             logger.debug('<<- (%s) Voice Packet From:%s:%s', self._network, host, port)
