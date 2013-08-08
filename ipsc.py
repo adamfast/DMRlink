@@ -418,6 +418,7 @@ class IPSC(DatagramProtocol):
             logger.debug('<<- (%s) XCMP_XNL From:%s:%s, but we did not indicate XCMP capable!', self._network, host, port)
 
         elif (_packettype == PEER_LIST_REPLY):
+            logger.debug('<<- (%s) Peer List Received From:%s:%s', self._network, host, port)
             self._peer_list = process_peer_list(data, self._network, self._peer_list)
             
         elif (_packettype == PVT_VOICE):
