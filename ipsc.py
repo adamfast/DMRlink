@@ -112,8 +112,6 @@ def validate_auth(_key, _data):
 def process_peer_list(_data, _network, _peer_list):
     _log = logger.debug
     
-    print(_peer_list)
-    
     NETWORK[_network]['MASTER']['STATUS']['PEER-LIST'] = True
     _num_peers = int(str(int(binascii.b2a_hex(_data[5:7]), 16))[1:])
     NETWORK[_network]['LOCAL']['NUM_PEERS'] = _num_peers
@@ -140,12 +138,7 @@ def process_peer_list(_data, _network, _peer_list):
                 'TS1_LINK':  decoded_mode[2],
                 'TS2_LINK':  decoded_mode[3],
                 'STATUS':    {'CONNECTED': False, 'KEEP_ALIVES_SENT': 0, 'KEEP_ALIVES_MISSED': 0, 'KEEP_ALIVES_OUTSTANDING': 0}
-            })
-    
-    for peer in NETWORK[_network]['PEERS']:
-        print(binascii.b2a_hex(peer['RADIO_ID']))
-            
-    print(_peer_list)     
+            })       
     return _peer_list
 
 
@@ -194,7 +187,7 @@ def print_peer_list(_network):
     _log = logger.info
 #    os.system('clear')
     if not NETWORK[_network]['PEERS']:
-        print('No peer list yet for: {}' .format(_network))
+        print('No peer list for: {}' .format(_network))
         return
     
     print('Peer List for: %s' % _network)
@@ -426,7 +419,6 @@ class IPSC(DatagramProtocol):
 
         elif (_packettype == PEER_LIST_REPLY):
             self._peer_list = process_peer_list(data, self._network, self._peer_list)
-            print(self._peer_list)
             
         elif (_packettype == PVT_VOICE):
             logger.debug('<<- (%s) Voice Packet From:%s:%s', self._network, host, port)
