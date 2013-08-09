@@ -9,6 +9,9 @@
 # Configuration file for IPSC.py -- each network has several parts, some of this is muted by the script once it runs, thus there are placeholders
 NETWORK = {
     'IPSC1': {
+        'GROUP_VOICE': [
+            {'SRC_GROUP': b'\x00\x00\x01', 'DST_NET': 'IPSC2', 'DST_GROUP': b'\x00\x00\x02'}
+        ],
         'LOCAL': {
             'MODE': b'\x6A', # Decoded values below
             'PEER_OPER': True,
