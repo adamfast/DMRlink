@@ -115,10 +115,10 @@ def fwd_group_voice(_network, _data):
         print(binascii.b2a_hex(_src_group), ' ', binascii.b2a_hex(source['SRC_GROUP']))
         if source['SRC_GROUP'] == _src_group:
             print(binascii.b2a_hex(_src_ipsc), ' ', binascii.b2a_hex(source['DST_NET']))
-    #        _data.replace(_src_ipsc, NETWORK[source]['DST_NET']['LOCAL']['RADIO_ID'])
-    #        _data.replace(_src_group, source['DST_GROUP'])
-    #        _data = hashed_packet(NETWORK[source]['DST_NET']['LOCAL']['AUTH_KEY'], _data)
-    #        print(binascii.b2a_hex(_data))
+            _data.replace(_src_ipsc, NETWORK[source]['DST_NET']['LOCAL']['RADIO_ID'])
+            _data.replace(_src_group, source['DST_GROUP'])
+            _data = hashed_packet(NETWORK[source]['DST_NET']['LOCAL']['AUTH_KEY'], _data)
+            print(binascii.b2a_hex(_data))
     # Match source group to a rule
     # Write destination group to packet
     # Hash packet
@@ -487,7 +487,9 @@ class IPSC(DatagramProtocol):
 #************************************************
 
 if __name__ == '__main__':
+    networks = {}
     for ipsc_network in NETWORK:
-        if (NETWORK[ipsc_network]['LOCAL']['ENABLED']):
-            reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], IPSC(ipsc_network))
+        networks[ipsc_network] = IPSC(ipsc_network)
+        if (NETWORK[ipsc_network]['LOCAL']['ENABLED']):            
+            reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], networks[ipsc_network])
     reactor.run()
