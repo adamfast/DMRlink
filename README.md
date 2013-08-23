@@ -1,4 +1,4 @@
-***This code actually works. If you stumbed across the project, this is what you most want to know: It's not a complete application, yet, but it does actually work and run without messing up your IPSC network! If you download it and try it, you shouldn't be disappointed like I was with every online repo I found that was supposed to be an IPSC client. Pay attention to requirements, there are several python modules needed, but none are esoteric.***
+***This code actually works. If you stumbled across the project, this is what you most want to know: It's not a complete application, yet, but it does actually work and run without messing up your IPSC network! If you download it and try it, you shouldn't be disappointed like I was with every online repo I found that was supposed to be an IPSC client. Pay attention to requirements, there are several python modules needed, but none are esoteric.***
 
 ***What does it to today? It will connect to mulitple IPSC networks as a peer and maintain those relationships. Current work is on adding validation routines. Once this is completed, an attempt will be made to bridge networks.***
 
