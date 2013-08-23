@@ -111,11 +111,11 @@ def validate_auth(_key, _data):
 def fwd_group_voice(_network, _data):
     _src_group = _data[9:12]
     _src_ipsc  = _data[1:5]
-    for source in NETWORK[_network]['GROUP_VOICE']:
+    for source in NETWORK[_network]['RULES']['GROUP_VOICE']:
         print(binascii.b2a_hex(_src_group), ' ', binascii.b2a_hex(source['SRC_GROUP']))
         if source['SRC_GROUP'] == _src_group:
-            print(binascii.b2a_hex(_src_ipsc), ' ', binascii.b2a_hex(source['DST_NET']))
-            _data.replace(_src_ipsc, NETWORK[source]['DST_NET']['LOCAL']['RADIO_ID'])
+            print(binascii.b2a_hex(_src_ipsc), ' ', networks[source['DST_NET']])
+            _data.replace(_src_ipsc, source['DST_NET']['LOCAL']['RADIO_ID'])
             _data.replace(_src_group, source['DST_GROUP'])
             _data = hashed_packet(NETWORK[source]['DST_NET']['LOCAL']['AUTH_KEY'], _data)
             print(binascii.b2a_hex(_data))
@@ -142,7 +142,7 @@ def process_peer_list(_data, _network, _peer_list):
         hex_address  = (_data[i+4:i+8])
         hex_port     = (_data[i+8:i+10])
         hex_mode     = (_data[i+10:i+11])
-        decoded_mode = mode_decode(hex_mode)
+        decoded_mode = mode_decode(hex_mode, _data)
 
         if hex_radio_id not in _peer_list:
             _peer_list.append(hex_radio_id)
@@ -162,7 +162,7 @@ def process_peer_list(_data, _network, _peer_list):
 
 # Given a mode byte, decode the functions and return a tuple of results
 #
-def mode_decode(_mode):
+def mode_decode(_mode, _data):
     _log = logger.debug
     _mode = int(binascii.b2a_hex(_mode), 16)
     link_op   = _mode & PEER_OP_MSK
