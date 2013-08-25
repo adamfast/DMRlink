@@ -111,17 +111,15 @@ def validate_auth(_key, _data):
 def fwd_group_voice(_network, _data):
     _src_group = _data[9:12]
     _src_ipsc  = _data[1:5]
+    
     for source in NETWORK[_network]['RULES']['GROUP_VOICE']:
-        print(binascii.b2a_hex(_src_group), ' ', binascii.b2a_hex(source['SRC_GROUP']))
         if source['SRC_GROUP'] == _src_group:
-            print(binascii.b2a_hex(_src_ipsc), ' ', networks[source['DST_NET']])
-            _data.replace(_src_ipsc, source['DST_NET']['LOCAL']['RADIO_ID'])
-            _data.replace(_src_group, source['DST_GROUP'])
-            _data = hashed_packet(NETWORK[source]['DST_NET']['LOCAL']['AUTH_KEY'], _data)
             print(binascii.b2a_hex(_data))
-    # Match source group to a rule
-    # Write destination group to packet
-    # Hash packet
+            _data = _data.replace(_src_ipsc, NETWORK[(source['DST_NET'])]['LOCAL']['RADIO_ID'])
+            _data = _data.replace(_src_group, source['DST_GROUP'])
+            _data = hashed_packet(NETWORK[(source['DST_NET'])]['LOCAL']['AUTH_KEY'], _data)
+            print(binascii.b2a_hex(_data))
+            print()
     # Send packet
 
 # Take a recieved peer list and the network it belongs to, process and populate the
