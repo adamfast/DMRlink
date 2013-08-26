@@ -114,13 +114,16 @@ def fwd_group_voice(_network, _data):
     
     for source in NETWORK[_network]['RULES']['GROUP_VOICE']:
         if source['SRC_GROUP'] == _src_group:
+            _target = source['DST_NET']
+            _target_sock = NETWORK[_target]['MASTER']['IP'], NETWORK[_target]['MASTER']['PORT']
             print(binascii.b2a_hex(_data))
-            _data = _data.replace(_src_ipsc, NETWORK[(source['DST_NET'])]['LOCAL']['RADIO_ID'])
+            _data = _data.replace(_src_ipsc, NETWORK[_target]['LOCAL']['RADIO_ID'])
             _data = _data.replace(_src_group, source['DST_GROUP'])
-            _data = hashed_packet(NETWORK[(source['DST_NET'])]['LOCAL']['AUTH_KEY'], _data)
+            _data = hashed_packet(NETWORK[_target]['LOCAL']['AUTH_KEY'], _data)
             print(binascii.b2a_hex(_data))
             print()
-    # Send packet
+            networks[_target].transport.write(_data, (_target_sock))
+            
 
 # Take a recieved peer list and the network it belongs to, process and populate the
 # data structure in my_ipsc_config with the results.
