@@ -305,12 +305,10 @@ class IPSC(DatagramProtocol):
         if (self._master_stat['CONNECTED'] == False):
             reg_packet = hashed_packet(self._local['AUTH_KEY'], self.MASTER_REG_REQ_PKT)
             self.transport.write(reg_packet, (self._master_sock))
-            logger.debug('->> (%s) Master Registration Request To:%s From:%s', self._network, self._master_sock, binascii.b2a_hex(self._local_id))
         
         elif (self._master_stat['CONNECTED'] == True):
             master_alive_packet = hashed_packet(self._local['AUTH_KEY'], self.MASTER_ALIVE_PKT)
             self.transport.write(master_alive_packet, (self._master_sock))
-            logger.debug('->> (%s) Master Keep-alive %s Sent To:%s', self._network, self._master_stat['KEEP_ALIVES_SENT'], self._master_sock)
             
             if (self._master_stat['KEEP_ALIVES_OUTSTANDING']) > 0:
                 self._master_stat['KEEP_ALIVES_MISSED'] += 1
@@ -328,7 +326,6 @@ class IPSC(DatagramProtocol):
         if  ((self._master_stat['CONNECTED'] == True) and (self._master_stat['PEER-LIST'] == False)):     
             peer_list_req_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_LIST_REQ_PKT)
             self.transport.write(peer_list_req_packet, (self._master_sock))
-            logger.debug('->> (%s) List Reqested from Master:%s', self._network, self._master_sock)
 
         if (self._master_stat['PEER-LIST'] == True):
             for peer in (self._peers):
@@ -337,11 +334,9 @@ class IPSC(DatagramProtocol):
                 if peer['STATUS']['CONNECTED'] == False:
                     peer_reg_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REQ_PKT)
                     self.transport.write(peer_reg_packet, (peer['IP'], peer['PORT']))
-                    logger.debug('->> (%s) Peer Registration Request To:%s:%s From:%s', self._network, peer['IP'], peer['PORT'], binascii.b2a_hex(self._local_id))
                 elif peer['STATUS']['CONNECTED'] == True:
                     peer_alive_req_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REQ_PKT)
                     self.transport.write(peer_alive_req_packet, (peer['IP'], peer['PORT']))
-                    logger.debug('->> (%s) Peer Keep-Alive Request To:%s:%s From:%s', self._network, peer['IP'], peer['PORT'], binascii.b2a_hex(self._local_id))
 
                     if peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] > 0:
                         peer['STATUS']['KEEP_ALIVES_MISSED'] += 1
@@ -354,8 +349,6 @@ class IPSC(DatagramProtocol):
                     
                     peer['STATUS']['KEEP_ALIVES_SENT'] += 1
                     peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] += 1
-        
-        logger.debug('(%s) timed loop finished', self._network) # temporary debugging to make sure this part runs
     
     
     
@@ -366,8 +359,6 @@ class IPSC(DatagramProtocol):
     # Actions for recieved packets by type: Call a function or process here...
     #
     def datagramReceived(self, data, (host, port)):
-        logger.debug('received %r from %s:%d', binascii.b2a_hex(data), host, port)
-
         _packettype = data[0:1]
         _peerid     = data[1:5]
         _dec_peerid = int(binascii.b2a_hex(_peerid), 16)
@@ -387,21 +378,15 @@ class IPSC(DatagramProtocol):
                 logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
                 return
             fwd_group_voice(self._network, data)
-            
-            logger.debug('<<- (%s) Group Voice Packet From:%s:%s', self._network, host, port)
 
         # IPSC keep alives, master and peer, come next in processing priority
         #
         elif (_packettype == PEER_ALIVE_REQ):
             if valid_peer(self._peer_list, _peerid) == False:
-                
                 logger.warning('(%s) PeerError: Peer %s not in peer-list: %s', self._network, _dec_peerid, self._peer_list)
                 return
-        
-            logger.debug('<<- (%s) Peer Keep-alive Request From Peer ID %s at:%s:%s', self._network, _dec_peerid, host, port)
             peer_alive_reply_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REPLY_PKT)
             self.transport.write(peer_alive_reply_packet, (host, port))
-            logger.debug('->> (%s) Peer Keep-alive Reply sent To:%s:%s', self._network, host, port)
 
         elif (_packettype == MASTER_ALIVE_REPLY):
             if valid_master(self._network, _peerid) == False:
@@ -412,7 +397,6 @@ class IPSC(DatagramProtocol):
             self._master_stat['KEEP_ALIVES_OUTSTANDING'] = 0
 
         elif (_packettype == PEER_ALIVE_REPLY):
-            logger.debug('<<- (%s) Peer Keep-alive Reply From:   %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
             for peer in self._config['PEERS']:
                 if peer['RADIO_ID'] == _peerid:
                     peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] = 0     
@@ -427,51 +411,46 @@ class IPSC(DatagramProtocol):
             self._master['RADIO_ID'] = _peerid
             self._master_stat['CONNECTED'] = True
             self._master_stat['KEEP_ALIVES_OUTSTANDING'] = 0
-            logger.debug('<<- (%s) Master Registration Reply From:%s:%s ', self._network, host, port)
 
         elif (_packettype == PEER_REG_REQ):
-            logger.debug('<<- (%s) Peer Registration Request From Peer ID %s at:%s:%s', self._network, _dec_peerid, host, port)
             peer_reg_reply_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REPLY_PKT)
             self.transport.write(peer_reg_reply_packet, (host, port))
-            logger.debug('->> (%s) Peer Registration Reply Sent To:%s:%s', self._network, host, port)
 
         elif (_packettype == PEER_REG_REPLY):
-            logger.debug('<<- (%s) Peer Registration Reply From: %s \t@ IP: %s:%s', self._network, _dec_peerid, host, port)
             for peer in self._config['PEERS']:
                 if peer['RADIO_ID'] == _peerid:
                     peer['STATUS']['CONNECTED'] = True
 
         elif (_packettype == PEER_LIST_REPLY):
-            logger.debug('<<- (%s) Peer List Received From:%s:%s', self._network, host, port)
             self._peer_list = process_peer_list(data, self._network, self._peer_list)
 
         # Other "user" related packet types that we don't do much or anything with yet
         #
         elif (_packettype == PVT_VOICE):
-            logger.debug('<<- (%s) Voice Packet From:%s:%s', self._network, host, port)
+            logger.warning('<<- (%s) Voice Packet From:%s:%s', self._network, host, port)
             
         elif (_packettype == GROUP_DATA):
-            logger.debug('<<- (%s) Group Data Packet From:%s:%s', self._network, host, port)
+            logger.warning('<<- (%s) Group Data Packet From:%s:%s', self._network, host, port)
             
         elif (_packettype == PVT_DATA):
-            logger.debug('<<- (%s) Private Data Packet From From:%s:%s', self._network, host, port)
+            logger.warning('<<- (%s) Private Data Packet From From:%s:%s', self._network, host, port)
             
         elif (_packettype == DE_REG_REQ):
-            logger.debug('<<- (%s) Peer De-Registration Request From:%s:%s', self._network, host, port)
+            logger.warning('<<- (%s) Peer De-Registration Request From:%s:%s', self._network, host, port)
             
         elif (_packettype == DE_REG_REPLY):
-            logger.debug('<<- (%s) Peer De-Registration Reply From:%s:%s', self._network, host, port)
+            logger.warning('<<- (%s) Peer De-Registration Reply From:%s:%s', self._network, host, port)
             
         elif (_packettype == RPT_WAKE_UP):
-            logger.debug('<<- (%s) Repeater Wake-Up Packet From:%s:%s', self._network, host, port)
+            logger.warning('<<- (%s) Repeater Wake-Up Packet From:%s:%s', self._network, host, port)
     
         # Technically, we're not paying any attention to these types because we're not part of the XCMP call control structure
         #
         elif (_packettype == XCMP_XNL):
-            logger.debug('<<- (%s) XCMP_XNL From:%s:%s, but we did not indicate XCMP capable!', self._network, host, port)
+            logger.warning('<<- (%s) XCMP_XNL From:%s:%s, but we did not indicate XCMP capable!', self._network, host, port)
             
         elif (_packettype in (CALL_CTL_1, CALL_CTL_2, CALL_CTL_3)):
-            logger.debug('<<- (%s) Call Control Packet From:%s:%s', self._network, host, port)
+            logger.warning('<<- (%s) Call Control Packet From:%s:%s', self._network, host, port)
             
         # If there's a packet type we don't know aobut, it should be logged so we can figure it out and take an appropriate action!    
         else:
