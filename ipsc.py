@@ -105,9 +105,9 @@ def validate_auth(_key, _data):
         _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
         return False
 
+
 # Forward Group Voice Packet
-# THIS IS BROKEN - BEGIN WORK HERE. REPLACING SEGMENTS ISN'T REFERENCING THE RIGHT SUBSTITUTE DATA AND 
-# I'M GOIGN TO BED NOW.
+#
 def fwd_group_voice(_network, _data):
     _src_group = _data[9:12]
     _src_ipsc  = _data[1:5]
@@ -116,12 +116,9 @@ def fwd_group_voice(_network, _data):
         if source['SRC_GROUP'] == _src_group:
             _target = source['DST_NET']
             _target_sock = NETWORK[_target]['MASTER']['IP'], NETWORK[_target]['MASTER']['PORT']
-            print(binascii.b2a_hex(_data))
             _data = _data.replace(_src_ipsc, NETWORK[_target]['LOCAL']['RADIO_ID'])
             _data = _data.replace(_src_group, source['DST_GROUP'])
             _data = hashed_packet(NETWORK[_target]['LOCAL']['AUTH_KEY'], _data)
-            print(binascii.b2a_hex(_data))
-            print()
             networks[_target].transport.write(_data, (_target_sock))
             
 
