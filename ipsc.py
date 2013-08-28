@@ -119,8 +119,17 @@ def fwd_group_voice(_network, _data):
             _data = _data.replace(_src_ipsc, NETWORK[_target]['LOCAL']['RADIO_ID'])
             _data = _data.replace(_src_group, source['DST_GROUP'])
             _data = hashed_packet(NETWORK[_target]['LOCAL']['AUTH_KEY'], _data)
-            networks[_target].transport.write(_data, (_target_sock))
+            send_to_ipsc(_target, _data)
+ 
             
+# Accept a complete packet, ready to be sent, and send it to all active peers + master in an IPSC
+#
+def send_to_ipsc(_target, _packet):
+    networks[_target].transport.write(_packet, (NETWORK[_target]['MASTER']['IP'], NETWORK[_target]['MASTER']['PORT']))
+    for peer in NETWORK[_target]['PEERS']:
+        if peer['STATUS']['CONNECTED'] == True:
+            networks[_target].transport.write(_packet, (peer['IP'], peer['PORT']))
+        
 
 # Take a recieved peer list and the network it belongs to, process and populate the
 # data structure in my_ipsc_config with the results.
@@ -138,7 +147,9 @@ def process_peer_list(_data, _network, _peer_list):
     for i in range(7, (_num_peers*11)+7, 11):
         hex_radio_id = (_data[i:i+4])
         hex_address  = (_data[i+4:i+8])
+        ip_address   = socket.inet_ntoa(hex_address)
         hex_port     = (_data[i+8:i+10])
+        port         = int(binascii.b2a_hex(hex_port), 16)
         hex_mode     = (_data[i+10:i+11])
         decoded_mode = mode_decode(hex_mode, _data)
 
@@ -146,15 +157,15 @@ def process_peer_list(_data, _network, _peer_list):
             _peer_list.append(hex_radio_id)
             NETWORK[_network]['PEERS'].append({
                 'RADIO_ID':  hex_radio_id, 
-                'IP':        socket.inet_ntoa(hex_address), 
-                'PORT':      int(binascii.b2a_hex(hex_port), 16), 
+                'IP':        ip_address, 
+                'PORT':      port, 
                 'MODE':      hex_mode,
                 'PEER_OPER': decoded_mode[0],
                 'PEER_MODE': decoded_mode[1],
                 'TS1_LINK':  decoded_mode[2],
                 'TS2_LINK':  decoded_mode[3],
                 'STATUS':    {'CONNECTED': False, 'KEEP_ALIVES_SENT': 0, 'KEEP_ALIVES_MISSED': 0, 'KEEP_ALIVES_OUTSTANDING': 0}
-            })       
+            })
     return _peer_list
 
 
