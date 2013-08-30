@@ -46,6 +46,7 @@ LINK_TYPE_IPSC        = b'\x04'
 IPSC_VER              = LINK_TYPE_IPSC + IPSC_VER_19 + LINK_TYPE_IPSC + IPSC_VER_17
 
 # Conditions for accepting certain types of messages... the cornerstone of a secure IPSC system :)
+'''
 REQ_VALID_PEER = [
     PEER_REG_REQ,
     PEER_REG_REPLY
@@ -81,3 +82,4 @@ REQ_PEER_CONNECTED = [
 REQ_VALID_MASTER_OR_PEER = [
     REQ_VALID_PEER, REQ_VALID_MASTER
 ]
+'''
