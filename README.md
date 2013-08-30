@@ -1,6 +1,6 @@
 ***This code actually works. If you stumbled across the project, this is what you most want to know: It's not a complete application, yet, but it does actually work and run without messing up your IPSC network! If you download it and try it, you shouldn't be disappointed like I was with every online repo I found that was supposed to be an IPSC client. Pay attention to requirements, there are several python modules needed, but none are esoteric.***
 
-***What does it to today? It will connect to mulitple IPSC networks as a peer and maintain those relationships. As of the current version, it can now bridge Group Voice calls from one IPSC to another, however, it is only sending data to the master of the target IPSC as of now... a simple addition and the next goal.***
+***What does it to today? It will connect to mulitple IPSC networks as a peer and maintain those relationships. As of the current version, it can now bridge Group Voice calls from one IPSC to another.***
 
 ##PROJECT: DMR Repeater Internet Linking.
 **PURPOSE:** Troubleshooting IPSC performance issues/possibly building an application gateway to extend IPSC beyond 15 repeaters.
