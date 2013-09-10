@@ -14,7 +14,6 @@ MASTER:
      |--SRC ID-| |MODE| |  FLAGS  ||PEERS||IPSC VER| |IPSC VER|  |-1st 10 bytes of SHA-1 Hash-|
 	     312000
 
-
 ----
 PEER:
 96   00 c8 32 68    65   00 00 e0 3c    04 03      04 02     45 d0 a9 c9 07 5c 05 ad 50 67
@@ -34,15 +33,9 @@ PEER:
 
 MASTER: (This appears to be the peer list)
 93    00 04 c2 c0   00 37   00 04 c2 c3 d1 72 71 e9 c3 5a 6a    00 04 c2 c4 6c c8 a4 3d c3 50 6a     00 04 c2 c5 44 67 16 bb c3 5c 6a     00 c8 32 65 a4 71 4c 0c c3 51 6a    ...SHA-1 truncated
-|TPE| |--SRC ID-|           |-PEER ID-| |-PEER IP-| |PRT||MDE|  |-PEER ID-| |-PEER IP-| |PRT||MDE|   |-PEER ID-| |-PEER IP-| |PRT||MDE|   |-PEER ID-| |-PEER IP-| |PRT||MDE|
-      13120104              3120103 209.114.113.233 50010 1&2   3120104  108.200.164.61 50000 1&2    3120105   68.103.22.187 50012 1&2    13120101  164.113.26.12 50001 1&2
+|TPE| |--SRC ID-|  |-LEN-| |-PEER ID-| |-PEER IP-| |PRT||MDE|  |-PEER ID-| |-PEER IP-| |PRT||MDE|   |-PEER ID-| |-PEER IP-| |PRT||MDE|   |-PEER ID-| |-PEER IP-| |PRT||MDE|
+      13120104     44 (4)  3120103 209.114.113.233 50010 1&2   3120104  108.200.164.61 50000 1&2    3120105   68.103.22.187 50012 1&2    13120101  164.113.26.12 50001 1&2
 
-	 
-91 0004c2c0 6a 0000805d0004 0401 0400 -- be 3c 5c 6a f6 11 8a c4 60 52
-
-91 0004c2c0 6a 0000805d0004 0403 0400 -- be c9 27 21 8f 07 a2 23 3f 07
-
-91 0004c2c0 6a 0000805d0004 0402 0400 -- 2e da 60 20 62 2d 6e b5 9e 6c
 
 ------------------------------------------------------------
 Copyright (c) 2013 Cortney T. Buffington, N0MJS n0mjs@me.com
