@@ -13,20 +13,21 @@ NETWORK = {
             {'SRC_GROUP': b'\x00\x00\x01', 'DST_NET': 'IPSC2', 'DST_GROUP': b'\x00\x00\x02'}
         ],
         'LOCAL': {
-            'MODE': b'\x6A', # Decoded values below
-            'PEER_OPER': True,
-            'PEER_MODE': 'DIGITAL',
-            'TS1_LINK': True,
-            'TS2_LINK': True,
+            'MODE': b'\x6A',        # Decoded values below, use this only for now
+            'PEER_OPER': True,      # Not yet in use, must be hand-coded in MODE
+            'PEER_MODE': 'DIGITAL', # Not yet in use, must be hand-coded in MODE
+            'TS1_LINK': True,       # Not yet in use, must be hand-coded in MODE
+            'TS2_LINK': True,       # Not yet in use, must be hand-coded in MODE
             'FLAGS': b'\x00\x00\x00\x14',
             'PORT': 50001,
-            'NUM_PEERS': 0,
             'ALIVE_TIMER': 5, # Seconds between keep-alives and registration attempts
             'MAX_MISSED': 5, # Maximum number of keep-alives missed before de-registration
             'RADIO_ID': b'\x00\x00\x00\x0A',
             'AUTH_ENABLED': True,
             'AUTH_KEY': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01',
             'ENABLED': True,
+            # MAKE NO CHANGES BELOW HERE!!!
+            'NUM_PEERS': 0,
             'STATUS': {
                 'ACTIVE': False
             }
@@ -34,6 +35,7 @@ NETWORK = {
         'MASTER': {
             'IP': '1.2.3.4',
             'PORT': 50000,
+            # MAKE NO CHANGES BELOW HERE!!!
             'RADIO_ID': b'\x00\x00\x00\x00',
             'MODE': b'\x00',
             'PEER_OPER': False,
