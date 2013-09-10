@@ -152,16 +152,18 @@ PEER LIST REQUEST:
 
 PEER LIST RESPONSE:
 
-	TYPE(1 Byte) + SRC_ID (4 Bytes) + NUM_PEERS * (2 Bytes) + {PEER_ID, PEER_IP, PEER_PORT, PEER_LINKING}... [+ AUTHENTICATION (10 Bytes)]
-	93 0004c2c0 002c* 
+	TYPE(1 Byte) + SRC_ID (4 Bytes) + PEER_LIST_LENGTH* (2 Bytes) + {PEER_ID, PEER_IP, PEER_PORT, PEER_LINKING}... [+ AUTHENTICATION (10 Bytes)]
+	93 0004c2c0 002c 
                  	 	00000001 6ccf7505 c351 6a
                 		0004c2c3 d17271e9 c35a 6a
                  	   	0004c2c5 446716bb c35c 6a
                   	  	00c83265 a471c50c c351 6a
                                               		d66a94568d29357205c2
+                                                    
+    *Number of peers can be derived from PEER_LIST_LENGTH, as each peer entry is 11 bytes (Thanks Hans!)
 
 
-*Number of Peers, oddly formatted, stripping most significant non-zero digit seems to produce the correct value, such as 0x2c = 44, or 4 peers; or 0x6e = 110, or 10 peers
+Number of peers can be derived from PEER_LIST_LENGTH, as each peer entry is 11 bytes
 
 **CAPABILITIES: Bytes 6-14 (6-16 for master reg. reply):**
 (Displayed in most to least significant bytes)

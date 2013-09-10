@@ -160,14 +160,14 @@ def process_peer_list(_data, _network, _peer_list):
 #    _log = logger.debug
     # Set the status flag to indicate we have recieved a Peer List
     NETWORK[_network]['MASTER']['STATUS']['PEER-LIST'] = True
-    # Determine how many peers are in the list by parsing the packet 
-    _num_peers = int(str(int(binascii.b2a_hex(_data[5:7]), 16))[1:])
-    # Record the number of peers in the data structure... we'll use it later.
-    NETWORK[_network]['LOCAL']['NUM_PEERS'] = _num_peers
+    # Determine the length of the peer list for the parsing iterator
+    _peer_list_length = int(binascii.b2a_hex(_data[5:7]), 16)
+    # Record the number of peers in the data structure... we'll use it later (11 bytes per peer entry)
+    NETWORK[_network]['LOCAL']['NUM_PEERS'] = _peer_list_length/11
     #    _log('<<- (%s) The Peer List has been Received from Master\n%s There are %s peers in this IPSC Network', _network, (' '*(len(_network)+7)), _num_peers)
     
     # Iterate each peer entry in the peer list. Skip the header, then pull the next peer, the next, etc.
-    for i in range(7, (_num_peers*11)+7, 11):
+    for i in range(7, (_peer_list_length)+7, 11):
         # Extract various elements from each entry...
         _hex_radio_id = (_data[i:i+4])
         _hex_address  = (_data[i+4:i+8])
