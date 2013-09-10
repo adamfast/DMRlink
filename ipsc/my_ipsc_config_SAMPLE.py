@@ -24,6 +24,7 @@ NETWORK = {
             'ALIVE_TIMER': 5, # Seconds between keep-alives and registration attempts
             'MAX_MISSED': 5, # Maximum number of keep-alives missed before de-registration
             'RADIO_ID': b'\x00\x00\x00\x0A',
+            'AUTH_ENABLED': True,
             'AUTH_KEY': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01',
             'ENABLED': True,
             'STATUS': {

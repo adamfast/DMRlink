@@ -25,91 +25,50 @@ import socket
 # Import system logger configuration
 #
 try:
-    from ipsc_logger import logger
+    from ipsc.ipsc_logger import logger
 except ImportError:
     sys.exit('System logger configuraiton not found or invalid')
 
 # Import configuration and informational data structures
 #
 try:
-    from my_ipsc_config import NETWORK
+    from ipsc.my_ipsc_config import NETWORK
 except ImportError:
     sys.exit('Configuration file not found, or not valid formatting')
 
 # Import IPSC message types and version information
 #
 try:
-    from ipsc_message_types import *
+    from ipsc.ipsc_message_types import *
 except ImportError:
     sys.exit('IPSC message types file not found or invalid')
 
 # Import IPSC flag mask values
 #
 try:
-    from ipsc_mask import *
+    from ipsc.ipsc_mask import *
 except ImportError:
     sys.exit('IPSC mask values file not found or invalid')
    
 
 
 #************************************************
-#     GLOBALLY SCOPED FUNCTIONS
+#     CALLBACK FUNCTIONS FOR USER PACKET TYPES
 #************************************************
 
-
-# Remove the hash from a paket and return the payload
-#
-def strip_hash(_data):
-#    _log = logger.debug
-    return _data[:-10]
-
-
-# Determine if the provided peer ID is valid for the provided network 
-#
-def valid_peer(_peer_list, _peerid):
-#    _log = logger.debug
-    if _peerid in _peer_list:
-        return True
-    return False
-
-
-# Determine if the provided master ID is valid for the provided network
-#
-def valid_master(_network, _peerid):
-#    _log = logger.debug
-    if NETWORK[_network]['MASTER']['RADIO_ID'] == _peerid:
-        return True
-    else:
-        return False
-
-
-# Take a packet to be SENT, calcualte auth hash and return the whole thing
-#
-def hashed_packet(_key, _data):
-#    _log = logger.debug
-    _hash = binascii.a2b_hex((hmac.new(_key,_data,hashlib.sha1)).hexdigest()[:20])
-    return (_data + _hash)    
+def call_ctl_1():
+    pass
     
+def call_ctl_2():
+    pass
     
-# Take a RECEIVED packet, calculate the auth hash and verify authenticity
-#
-def validate_auth(_key, _data):
-#    _log = logger.debug
-    _payload = strip_hash(_data)
-    _hash = _data[-10:]
-    _chk_hash = binascii.a2b_hex((hmac.new(_key,_payload,hashlib.sha1)).hexdigest()[:20])   
-
-    if _chk_hash == _hash:
-#        _log('    AUTH: Valid   - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
-        return True
-    else:
-#        _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
-        return False
-
-
-# Forward Group Voice Packet
-#
-def fwd_group_voice(_network, _data):
+def call_ctl_3():
+    pass
+    
+def xcmp_xnl():
+    pass
+    
+def group_voice():
 #    _log = logger.debug
     _src_group = _data[9:12]
     _src_ipsc  = _data[1:5]
@@ -128,18 +87,69 @@ def fwd_group_voice(_network, _data):
                 _data = hashed_packet(NETWORK[_target]['LOCAL']['AUTH_KEY'], _data)
             # Send the packet to all peers in the target IPSC
             send_to_ipsc(_target, _data)
- 
+    
+def private_voice():
+    pass
+    
+def group_data():
+    pass
+    
+def private_data():
+    pass
+
+def unknown_message():
+    pass
+
+    
+
+#************************************************
+#     UTILITY FUNCTIONS FOR INTERNAL USE
+#************************************************
+
+# Remove the hash from a paket and return the payload
+#
+def strip_hash(_data):
+#    _log = logger.debug
+#    _log('Stripped Packet: %s', binascii.b2a_hex(_data[:-10]))
+    return _data[:-10]
+
+
+# Determine if the provided peer ID is valid for the provided network 
+#
+def valid_peer(_peer_list, _peerid):
+#    _log = logger.debug
+    if _peerid in _peer_list:
+#        _log('Peer List Has An Entry For: %s', binascii.b2a_hex(_peerid))
+        return True
+#    _log('Peer List Does NOT Have An Entry For: %s', binascii.b2a_hex(_peerid))        
+    return False
+
+
+# Determine if the provided master ID is valid for the provided network
+#
+def valid_master(_network, _peerid):
+#    _log = logger.debug
+    if NETWORK[_network]['MASTER']['RADIO_ID'] == _peerid:
+#        _log('Master ID is Valid: %s', binascii.b2a_hex(_peerid))
+        return True     
+    else:
+#        _log('Master ID is NOT Valid: %s', binascii.b2a_hex(_peerid))
+        return False
+        
             
 # Accept a complete packet, ready to be sent, and send it to all active peers + master in an IPSC
 #
 def send_to_ipsc(_target, _packet):
 #    _log = logger.debug
     # Send to the Master
+#    _log('Sending %s to:', binascii.b2a_hex(_packet)    
     networks[_target].transport.write(_packet, (NETWORK[_target]['MASTER']['IP'], NETWORK[_target]['MASTER']['PORT']))
+#    _log('     Master: %s', binascii.b2a_hex(NETWORK[_target]['MASTER']['RADIO_ID']))
     # Send to each connected Peer
     for peer in NETWORK[_target]['PEERS']:
         if peer['STATUS']['CONNECTED'] == True:
             networks[_target].transport.write(_packet, (peer['IP'], peer['PORT']))
+#            _log('     Peer: %s', binascii.b2a_hex(peer['RADIO_ID']))
         
         
 # De-register a peer from an IPSC by removing it's infomation
@@ -147,10 +157,16 @@ def send_to_ipsc(_target, _packet):
 def de_register_peer(_network, _peerid):
 #    _log = logger.debug
     # Iterate for the peer in our data
+#    _log('Peer De-Registration Requested for: %s', binascii.b2a_hex(_peerid))
     for peer in NETWORK[_network]['PEERS']:
         # If we find the peer, remove it (we should find it)
         if _peerid == peer['RADIO_ID']:
             NETWORK[_network]['PEERS'].remove(peer)
+#            _log('     Peer Found And De-Registered')
+            return
+        else:
+#            _log('     Peer NOT Found')
+            pass
        
         
 # Take a recieved peer list and the network it belongs to, process and populate the
@@ -211,6 +227,9 @@ def process_peer_list(_data, _network, _peer_list):
             _ts2 = False  
 
         # If this entry was NOT already in our list, add it.
+        #     Note: We keep a "simple" peer list in addition to the large data
+        #           structure because soemtimes, we just need to identify a
+        #           peer quickly.
         if _hex_radio_id not in _peer_list:
             _peer_list.append(_hex_radio_id)
             NETWORK[_network]['PEERS'].append({
@@ -231,8 +250,11 @@ def process_peer_list(_data, _network, _peer_list):
 #
 def print_peer_list(_network):
 #    _log = logger.info
-    if not NETWORK[_network]['PEERS']:
-        print('No peer list for: {}' .format(_network))
+    _status = NETWORK[_network]['MASTER']['STATUS']['PEER-LIST']
+    print('Peer List Status for {}: {}' .format(_network, _status))
+    
+    if _status and not NETWORK[_network]['PEERS']:
+        print('We are the only peer for: %s' % _network)
         return
     
     print('Peer List for: %s' % _network)
@@ -256,8 +278,9 @@ def print_peer_list(_network):
 #************************************************
 
 #************************************************
-#     INITIAL SETUP of IPSC INSTANCE
+#     Base Class (used nearly all of the time)
 #************************************************
+
 
 class IPSC(DatagramProtocol):
     
@@ -304,27 +327,49 @@ class IPSC(DatagramProtocol):
             self.PEER_REG_REPLY_PKT   = (PEER_REG_REPLY + self._local_id + IPSC_VER)
             self.PEER_ALIVE_REQ_PKT   = (PEER_ALIVE_REQ + self._local_id + self.TS_FLAGS)
             self.PEER_ALIVE_REPLY_PKT = (PEER_ALIVE_REPLY + self._local_id + self.TS_FLAGS)
-                  
+     
         else:
             # If we didn't get called correctly, log it!
             #
             logger.error('(%s) Unexpected arguments found.', self._network)
-            
+
+
     # This is called by REACTOR when it starts, We use it to set up the timed
     # loop for each instance of the IPSC engine
     #       
     def startProtocol(self):
         # Timed loop for IPSC connection establishment and maintenance
-        # Others could be added later for things like updating a Web
-        # page, etc....
+        # Others could be added later for things like updating a status
+        # Web page, etc....
         #
         self._call = task.LoopingCall(self.timed_loop)
         self._loop = self._call.start(self._local['ALIVE_TIMER'])
 
 
-#************************************************
-#     FUNCTIONS FOR IPSC Network Engine
-#************************************************
+    # Take a packet to be SENT, calcualte auth hash and return the whole thing
+    #
+    def hashed_packet(self, _key, _data):
+    #    _log = logger.debug
+        _hash = binascii.a2b_hex((hmac.new(_key,_data,hashlib.sha1)).hexdigest()[:20])
+    #    _log('Hash for: %s is %s', binascii.b2a_hex(_data), binascii.b2a_hex(_hash)
+        return (_data + _hash)    
+    
+    
+    # Take a RECEIVED packet, calculate the auth hash and verify authenticity
+    #
+    def validate_auth(self, _key, _data):
+    #    _log = logger.debug
+        _payload = strip_hash(_data)
+        _hash = _data[-10:]
+        _chk_hash = binascii.a2b_hex((hmac.new(_key,_payload,hashlib.sha1)).hexdigest()[:20])   
+
+        if _chk_hash == _hash:
+    #        _log('    AUTH: Valid   - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
+            return True
+        else:
+    #        _log('    AUTH: Invalid - Payload: %s, Hash: %s', binascii.b2a_hex(_payload), binascii.b2a_hex(_hash))
+            return False
+
 
 #************************************************
 #     TIMED LOOP - MY CONNECTION MAINTENANCE
@@ -333,16 +378,17 @@ class IPSC(DatagramProtocol):
     def timed_loop(self):
         # Right now, without this, we really dont' know anything is happening.  
         print_peer_list(self._network)
+        
 
         # If the master isn't connected, we have to do that before we can do anything else!
-        if (self._master_stat['CONNECTED'] == False):
-            reg_packet = hashed_packet(self._local['AUTH_KEY'], self.MASTER_REG_REQ_PKT)
+        if self._master_stat['CONNECTED'] == False:
+            reg_packet = self.hashed_packet(self._local['AUTH_KEY'], self.MASTER_REG_REQ_PKT)
             self.transport.write(reg_packet, (self._master_sock))
         
         # Once the master is connected, we have to send keep-alives.. and make sure we get them back
         elif (self._master_stat['CONNECTED'] == True):
             # Send keep-alive to the master
-            master_alive_packet = hashed_packet(self._local['AUTH_KEY'], self.MASTER_ALIVE_PKT)
+            master_alive_packet = self.hashed_packet(self._local['AUTH_KEY'], self.MASTER_ALIVE_PKT)
             self.transport.write(master_alive_packet, (self._master_sock))
             
             # If we had a keep-alive outstanding by the time we send another, mark it missed.
@@ -365,7 +411,7 @@ class IPSC(DatagramProtocol):
         # If the master is connected and we don't have a peer-list yet....        
         if  ((self._master_stat['CONNECTED'] == True) and (self._master_stat['PEER-LIST'] == False)):
             # Ask the master for a peer-list
-            peer_list_req_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_LIST_REQ_PKT)
+            peer_list_req_packet = self.hashed_packet(self._local['AUTH_KEY'], self.PEER_LIST_REQ_PKT)
             self.transport.write(peer_list_req_packet, (self._master_sock))
 
         # If we do ahve a peer-list, we need to register with the peers and send keep-alives...
@@ -377,11 +423,11 @@ class IPSC(DatagramProtocol):
                     continue
                 # If we haven't registered to a peer, send a registration
                 if peer['STATUS']['CONNECTED'] == False:
-                    peer_reg_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REQ_PKT)
+                    peer_reg_packet = self.hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REQ_PKT)
                     self.transport.write(peer_reg_packet, (peer['IP'], peer['PORT']))
                 # If we have registered with the peer, then send a keep-alive
                 elif peer['STATUS']['CONNECTED'] == True:
-                    peer_alive_req_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REQ_PKT)
+                    peer_alive_req_packet = self.hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REQ_PKT)
                     self.transport.write(peer_alive_req_packet, (peer['IP'], peer['PORT']))
                     
                     # If we have a keep-alive outstanding by the time we send another, mark it missed.
@@ -421,7 +467,7 @@ class IPSC(DatagramProtocol):
         #
         if bool(self._local['AUTH_KEY']) == True:
             # Validate
-            if validate_auth(self._local['AUTH_KEY'], data) == False:
+            if self.validate_auth(self._local['AUTH_KEY'], data) == False:
                 logger.warning('(%s) AuthError: IPSC packet failed authentication. Type %s: Peer ID: %s', self._network, binascii.b2a_hex(_packettype), _dec_peerid)
                 return
             # Strip the hash, we won't need it anymore
@@ -434,8 +480,8 @@ class IPSC(DatagramProtocol):
             if not(valid_master(self._network, _peerid) == False or valid_peer(self._peer_list, _peerid) == False):
                 logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
                 return
-            # Group voice callback function
-            fwd_group_voice(self._network, data)
+            group_voice(self._network, data)
+
 
         # IPSC keep alives, master and peer, come next in processing priority
         #
@@ -446,7 +492,7 @@ class IPSC(DatagramProtocol):
                 return
                 
             # Generate a hashed paket from our template and send it.
-            peer_alive_reply_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REPLY_PKT)
+            peer_alive_reply_packet = self.hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REPLY_PKT)
             self.transport.write(peer_alive_reply_packet, (host, port))
 
         elif (_packettype == MASTER_ALIVE_REPLY):
@@ -483,8 +529,7 @@ class IPSC(DatagramProtocol):
         # Answer a peer registration request -- simple, no callback runction needed
         elif (_packettype == PEER_REG_REQ):
 # TO DO TO DO TO DO TO DO ***ADD CODE TO VALIDATE THE PEER IS IN OUR PEER-LIST HERE***
-#                         ***MAKE SURE WE CHECK TO SEE IF WE NEED TO MAKE AN AUTHENITCATED PACKET FIRST***
-            peer_reg_reply_packet = hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REPLY_PKT)
+            peer_reg_reply_packet = self.hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REPLY_PKT)
             self.transport.write(peer_reg_reply_packet, (host, port))
 
         elif (_packettype == PEER_REG_REPLY):
@@ -493,19 +538,11 @@ class IPSC(DatagramProtocol):
                     peer['STATUS']['CONNECTED'] = True
 
         elif (_packettype == PEER_LIST_REPLY):
-            self._peer_list = process_peer_list(data, self._network, self._peer_list)
-
-        # Other "user" related packet types that we don't do much or anything with yet
-        #
-        elif (_packettype == PVT_VOICE):
-            logger.warning('<<- (%s) Voice Packet From:%s:%s', self._network, host, port)
-            
-        elif (_packettype == GROUP_DATA):
-            logger.warning('<<- (%s) Group Data Packet From:%s:%s', self._network, host, port)
-            
-        elif (_packettype == PVT_DATA):
-            logger.warning('<<- (%s) Private Data Packet From From:%s:%s', self._network, host, port)
-            
+            if len(data) > 18:
+                self._peer_list = process_peer_list(data, self._network, self._peer_list)
+            else:
+                NETWORK[self._network]['MASTER']['STATUS']['PEER-LIST'] = True
+ 
         elif (_packettype == DE_REG_REQ):
             de_register_peer(self._network, _peerid)
             logger.warning('<<- (%s) Peer De-Registration Request From:%s:%s', self._network, host, port)
@@ -516,20 +553,51 @@ class IPSC(DatagramProtocol):
         elif (_packettype == RPT_WAKE_UP):
             logger.warning('<<- (%s) Repeater Wake-Up Packet From:%s:%s', self._network, host, port)
     
-        # Technically, we're not paying any attention to these types because we're not part of the XCMP call control structure
+        # Other "user" related packet types that we don't do much or anything with yet
         #
-        elif (_packettype == XCMP_XNL):
-            logger.warning('<<- (%s) XCMP_XNL From:%s:%s, but we did not indicate XCMP capable!', self._network, host, port)
+        elif (_packettype == PVT_VOICE):
+            private_voice()
+        
+        elif (_packettype == GROUP_DATA):
+            group_data()
+        
+        elif (_packettype == PVT_DATA):
+            private_data()
+     
+        elif (_packettype == XCMP_XNL): # NOTE: We currently indicate we are not XCMP/XNL capable!
+            xcmp_xnl()
             
-        elif (_packettype in (CALL_CTL_1, CALL_CTL_2, CALL_CTL_3)):
-            logger.warning('<<- (%s) Call Control Packet From:%s:%s', self._network, host, port)
+        elif (_packettype == CALL_CTL_1):
+            call_control_1()
+        
+        elif (_packettype == CALL_CTL_2):
+            call_control_2()
+                
+        elif (_packettype == CALL_CTL_3):
+            call_control_3()
             
         # If there's a packet type we don't know aobut, it should be logged so we can figure it out and take an appropriate action!    
         else:
-            packet_type = binascii.b2a_hex(_packettype)
-            logger.error('<<- (%s) Received Unprocessed Type %s From:%s:%s', self._network, packet_type, host, port)
+            unknown_message(_packettype, data)
 
+#************************************************
+#     Derived Class
+#       used in the rare event of an
+#       unauthenticated IPSC network.
+#************************************************
 
+class UnauthIPSC(IPSC):
+    
+    # There isn't a hash to build, so just return the data
+    #
+    def hashed_packet(self, _key, _data):
+        return (_data)    
+    
+    # Everything is validated, so just return True
+    #
+    def validate_auth(self, _key, _data):
+        return True
+    
 
 #************************************************
 #      MAIN PROGRAM LOOP STARTS HERE
@@ -538,7 +606,11 @@ class IPSC(DatagramProtocol):
 if __name__ == '__main__':
     networks = {}
     for ipsc_network in NETWORK:
-        networks[ipsc_network] = IPSC(ipsc_network)
+        if NETWORK[ipsc_network]['LOCAL']['AUTH_ENABLED'] == True:
+            networks[ipsc_network] = IPSC(ipsc_network)
+        else:
+            networks[ipsc_network] = UnauthIPSC(ipsc_network)
+            
         if (NETWORK[ipsc_network]['LOCAL']['ENABLED']):            
             reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], networks[ipsc_network])
     reactor.run()
