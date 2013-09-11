@@ -255,8 +255,9 @@ def print_peer_list(_network):
     
     if _status and not NETWORK[_network]['PEERS']:
         print('We are the only peer for: %s' % _network)
+        print('')
         return
-    
+        
     print('Peer List for: %s' % _network)
     for dictionary in NETWORK[_network]['PEERS']:
         if dictionary['RADIO_ID'] == NETWORK[_network]['LOCAL']['RADIO_ID']:
@@ -606,11 +607,10 @@ class UnauthIPSC(IPSC):
 if __name__ == '__main__':
     networks = {}
     for ipsc_network in NETWORK:
-        if NETWORK[ipsc_network]['LOCAL']['AUTH_ENABLED'] == True:
-            networks[ipsc_network] = IPSC(ipsc_network)
-        else:
-            networks[ipsc_network] = UnauthIPSC(ipsc_network)
-            
-        if (NETWORK[ipsc_network]['LOCAL']['ENABLED']):            
+        if (NETWORK[ipsc_network]['LOCAL']['ENABLED']): 
+            if NETWORK[ipsc_network]['LOCAL']['AUTH_ENABLED'] == True:
+                networks[ipsc_network] = IPSC(ipsc_network)
+            else:
+                networks[ipsc_network] = UnauthIPSC(ipsc_network)
             reactor.listenUDP(NETWORK[ipsc_network]['LOCAL']['PORT'], networks[ipsc_network])
     reactor.run()
