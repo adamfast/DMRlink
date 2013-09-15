@@ -446,7 +446,17 @@ class IPSC(DatagramProtocol):
                     peer['STATUS']['KEEP_ALIVES_SENT'] += 1
                     peer['STATUS']['KEEP_ALIVES_OUTSTANDING'] += 1
     
-    
+    def _notify_event(self, network, event, info):
+        """
+            Used internally whenever an event happens that may be useful to notify the outside world about.
+            Arguments:
+                network: string, network name to look up in config
+                event:   string, basic description
+                info:    dict, in the interest of accomplishing as much as possible without code changes.
+                         The dict will typically contain a peer_id so the origin of the event is known.
+        """
+
+        pass
     
 #************************************************
 #     RECEIVED DATAGRAM - ACT IMMEDIATELY!!!
@@ -481,6 +491,7 @@ class IPSC(DatagramProtocol):
             if not(valid_master(self._network, _peerid) == False or valid_peer(self._peer_list, _peerid) == False):
                 logger.warning('(%s) PeerError: Peer not in peer-list: %s', self._network, _dec_peerid)
                 return
+            self._notify_event(self._network, 'group_voice', {'peer_id': _dec_peerid})
             group_voice(self._network, data)
 
 
@@ -494,6 +505,7 @@ class IPSC(DatagramProtocol):
                 
             # Generate a hashed paket from our template and send it.
             peer_alive_reply_packet = self.hashed_packet(self._local['AUTH_KEY'], self.PEER_ALIVE_REPLY_PKT)
+            self._notify_event(self._network, 'peer_keepalive', {'peer_id': _dec_peerid})
             self.transport.write(peer_alive_reply_packet, (host, port))
 
         elif (_packettype == MASTER_ALIVE_REPLY):
@@ -531,9 +543,11 @@ class IPSC(DatagramProtocol):
         elif (_packettype == PEER_REG_REQ):
 # TO DO TO DO TO DO TO DO ***ADD CODE TO VALIDATE THE PEER IS IN OUR PEER-LIST HERE***
             peer_reg_reply_packet = self.hashed_packet(self._local['AUTH_KEY'], self.PEER_REG_REPLY_PKT)
+            self._notify_event(self._network, 'peer_registration', {'peer_id': _dec_peerid})
             self.transport.write(peer_reg_reply_packet, (host, port))
 
         elif (_packettype == PEER_REG_REPLY):
+            self._notify_event(self._network, 'peer_registration_reply', {'peer_id': _dec_peerid})
             for peer in self._config['PEERS']:
                 if peer['RADIO_ID'] == _peerid:
                     peer['STATUS']['CONNECTED'] = True
